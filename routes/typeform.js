@@ -1,6 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
+const { db } = require('../services/firebase');
 
 // Typeform webhook endpoint
 router.post('/', (req, res) => {
@@ -28,6 +29,27 @@ router.post('/', (req, res) => {
   } catch (error) {
     console.error('Error processing webhook:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Typeform specific endpoint for incident reports
+router.post('/typeform', async (req, res) => {
+  try {
+    const formData = req.body.form_response.answers;
+
+    const incidentData = {
+      full_name: formData.find(f => f.field.id === 'FULL_NAME')?.text || '',
+      email: formData.find(f => f.field.id === 'EMAIL')?.email || '',
+      mobile_number: formData.find(f => f.field.id === 'MOBILE_NUMBER')?.phone_number || '',
+      created_at: new Date().toISOString()
+    };
+
+    await db.collection('incident_reports').add(incidentData);
+
+    res.status(200).send('Success');
+  } catch (err) {
+    console.error('Error saving to Firestore:', err);
+    res.status(500).send('Failed to save');
   }
 });
 
