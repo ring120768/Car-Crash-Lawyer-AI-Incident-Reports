@@ -1,18 +1,11 @@
-
-const fs = require('fs');
-const path = require('path');
 const { google } = require('googleapis');
-const { Readable } = require('stream');
 
-// Load credentials from secrets
-const auth = new google.auth.JWT(
-  process.env.GOOGLE_CLIENT_EMAIL,
-  null,
-  process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : null,
-  ['https://www.googleapis.com/auth/drive.file']
-);
+const driveAuth = new google.auth.GoogleAuth({
+  credentials: JSON.parse(process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY),
+  scopes: ['https://www.googleapis.com/auth/drive'],
+});
 
-const drive = google.drive({ version: 'v3', auth });
+const drive = google.drive({ version: 'v3', auth: driveAuth });
 
 /**
  * Uploads a file to a designated Google Drive folder
@@ -27,7 +20,7 @@ async function uploadToDrive(filename, fileData, mimeType = 'application/pdf') {
 
     const media = {
       mimeType,
-      body: typeof fileData === 'string' ? Readable.from([fileData]) : Readable.from(fileData),
+      body: typeof fileData === 'string' ? require('stream').Readable.from([fileData]) : require('stream').Readable.from(fileData),
     };
 
     const fileMetadata = {
