@@ -68,7 +68,33 @@ const uploadReportToDrive = async (fileName, fileContent) => {
   }
 };
 
+const fs = require('fs');
+
+async function uploadToGoogleDrive(authClient, filePath, fileName, folderId = process.env.GOOGLE_DRIVE_FOLDER_ID) {
+  const driveOAuth = google.drive({ version: 'v3', auth: authClient });
+
+  const fileMetadata = {
+    name: fileName,
+    parents: folderId ? [folderId] : undefined,
+  };
+
+  const media = {
+    mimeType: 'application/pdf',
+    body: fs.createReadStream(filePath),
+  };
+
+  const response = await driveOAuth.files.create({
+    resource: fileMetadata,
+    media,
+    fields: 'id, webViewLink, webContentLink',
+  });
+
+  console.log('✅ File uploaded to Drive with OAuth:', response.data);
+  return response.data;
+}
+
 module.exports = {
   uploadToDrive,
-  uploadReportToDrive
+  uploadReportToDrive,
+  uploadToGoogleDrive
 };

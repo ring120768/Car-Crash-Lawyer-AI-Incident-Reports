@@ -3,6 +3,9 @@ const { uploadReportToDrive } = require('./services/driveUploader');
 const fs = require('fs');
 const path = require('path');
 
+// Set the Google Drive folder ID temporarily for testing
+process.env.GOOGLE_DRIVE_FOLDER_ID = '1abcDEFghiJKLmnop';
+
 (async () => {
   try {
     // Create reports directory if it doesn't exist
