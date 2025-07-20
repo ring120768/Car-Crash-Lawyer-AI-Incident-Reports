@@ -42,6 +42,33 @@ async function uploadToDrive(filename, fileData, mimeType = 'application/pdf') {
   }
 }
 
+const uploadReportToDrive = async (fileName, fileContent) => {
+  try {
+    const fileMetadata = {
+      name: fileName,
+      parents: process.env.GOOGLE_DRIVE_FOLDER_ID ? [process.env.GOOGLE_DRIVE_FOLDER_ID] : undefined,
+    };
+
+    const media = {
+      mimeType: 'application/pdf',
+      body: fileContent, // this should be a readable stream or buffer
+    };
+
+    const response = await drive.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: 'id, name, webViewLink',
+    });
+
+    console.log('✅ Uploaded file to Drive:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error uploading to Google Drive:', error.message);
+    throw error;
+  }
+};
+
 module.exports = {
-  uploadToDrive
+  uploadToDrive,
+  uploadReportToDrive
 };
