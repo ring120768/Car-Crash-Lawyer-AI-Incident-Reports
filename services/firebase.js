@@ -2,7 +2,10 @@
 const admin = require('firebase-admin');
 
 const serviceAccount = JSON.parse(
-  process.env.FIREBASE_SERVICE_ACCOUNT_KEY.replace(/\\n/g, '\n')
+  process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+    .replace(/\\n/g, '\n')
+    .replace(/\\\"/g, '"')
+    .replace(/\\\\/g, '\\')
 );
 
 if (!admin.apps.length) {
