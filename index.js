@@ -12,7 +12,7 @@ app.get("/report", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "report.html"));
 });
 
-const PORT = 5000; // Recommended port
+const PORT = 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
