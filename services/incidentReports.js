@@ -9,7 +9,7 @@ async function submitIncidentReport(userId, vehicleMake, vehicleModel, voiceTran
     }
 
     const incidentReportData = {
-      user_id: userId,  // USER_ID passed as parameter
+      user_id: userId,  // Link the report to the logged-in USER_ID
       vehicle_make: vehicleMake,
       vehicle_model: vehicleModel,
       voice_transcription_url: voiceTranscriptionUrl,
@@ -19,7 +19,7 @@ async function submitIncidentReport(userId, vehicleMake, vehicleModel, voiceTran
 
     // Add the incident report to Firestore (using correct collection name)
     const docRef = await db.collection('Car Crash Lawyer AI Incident Reports').add(incidentReportData);
-    console.log('✅ Incident Report submitted with ID:', docRef.id);
+    console.log('✅ Incident Report submitted and linked to USER_ID:', docRef.id);
 
     return { success: true, reportId: docRef.id };
 
