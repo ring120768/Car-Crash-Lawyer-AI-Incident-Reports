@@ -30,5 +30,33 @@ async function submitIncidentReport(userId, vehicleMake, vehicleModel, voiceTran
 }
 
 module.exports = {
-  submitIncidentReport
+  submitIncidentReport,
+  getIncidentReportsByUser
 };
+// Get all incident reports for a specific user
+async function getIncidentReportsByUser(userId) {
+  try {
+    // Query the flat collection filtering by user_id
+    const snapshot = await db.collection('Car Crash Lawyer AI Incident Reports')
+      .where('user_id', '==', userId)
+      .get();
+
+    if (snapshot.empty) {
+      console.log('📭 No incident reports found for user:', userId);
+      return [];
+    }
+
+    const reports = [];
+    snapshot.forEach(doc => {
+      reports.push({ id: doc.id, ...doc.data() });
+    });
+
+    console.log(`📊 Found ${reports.length} incident reports for user:`, userId);
+    return reports;
+
+  } catch (error) {
+    console.error('❌ Error fetching incident reports for user:', error.message);
+    throw error;
+  }
+}
+
