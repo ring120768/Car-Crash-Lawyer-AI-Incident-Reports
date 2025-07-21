@@ -28,8 +28,8 @@ async function fetchAndSaveCollection(collectionName, filename) {
 async function sendEmailWithAttachments() {
   try {
     // Fetch and save collections
-    const userFile = await fetchAndSaveCollection('users', 'users.json');
-    const reportFile = await fetchAndSaveCollection('incident_reports', 'incident_reports.json');
+    const userFile = await fetchAndSaveCollection('Car Crash Lawyer AI User Sign Up', 'users.json');
+    const reportFile = await fetchAndSaveCollection('Car Crash Lawyer AI Incident Reports', 'incident_reports.json');
 
     // Configure nodemailer
     const transporter = nodemailer.createTransporter({

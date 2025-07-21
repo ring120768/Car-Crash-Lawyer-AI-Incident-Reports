@@ -1,4 +1,3 @@
-
 const { admin, db } = require('./firebase');
 
 // Create a new user account (server-side approach)
@@ -15,7 +14,7 @@ async function createUser(email, password, fullName) {
     console.log('✅ User created with ID:', userId);
 
     // Store user details in Firestore (using existing collection name)
-    const userRef = db.collection('users').doc(userId);
+    const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(userId);
     await userRef.set({
       full_name: fullName,
       email: email,
@@ -35,8 +34,8 @@ async function createUser(email, password, fullName) {
 // Get user by ID
 async function getUserById(userId) {
   try {
-    const userDoc = await db.collection('users').doc(userId).get();
-    
+    const userDoc = await db.collection('Car Crash Lawyer AI User Sign Up').doc(userId).get();
+
     if (!userDoc.exists) {
       throw new Error('User not found');
     }
@@ -51,7 +50,7 @@ async function getUserById(userId) {
 // Update user information
 async function updateUser(userId, updateData) {
   try {
-    const userRef = db.collection('users').doc(userId);
+    const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(userId);
     await userRef.update({
       ...updateData,
       updated_at: new Date()
@@ -79,7 +78,7 @@ async function signUp(email, password, fullName = 'User Full Name') {
     console.log('✅ User signed up with ID:', userId);
 
     // Store user details in Firestore (using existing collection structure)
-    const userRef = db.collection('users').doc(userId);
+    const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(userId);
     await userRef.set({
       full_name: fullName,
       email: email,
