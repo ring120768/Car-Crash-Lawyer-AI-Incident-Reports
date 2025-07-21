@@ -5,15 +5,15 @@ async function testFirestoreConnection() {
   try {
     console.log('🔍 Testing Firestore connection...');
     
-    // Get all documents from the incident_reports collection
-    const snapshot = await db.collection('incident_reports').get();
+    // Get all documents from the Car Crash Lawyer AI Incident Reports collection
+    const snapshot = await db.collection('Car Crash Lawyer AI Incident Reports').get();
     
     if (snapshot.empty) {
-      console.log('📭 No documents found in incident_reports collection');
+      console.log('📭 No documents found in Car Crash Lawyer AI Incident Reports collection');
       return;
     }
     
-    console.log(`📄 Found ${snapshot.size} documents in incident_reports:`);
+    console.log(`📄 Found ${snapshot.size} documents in Car Crash Lawyer AI Incident Reports:`);
     snapshot.forEach(doc => {
       console.log(`${doc.id} =>`, doc.data());
     });

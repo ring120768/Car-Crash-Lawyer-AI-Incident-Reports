@@ -5,10 +5,10 @@ async function testLatestReports() {
   try {
     console.log('🔍 Fetching latest reports...');
     
-    const latest = await getLatestReports("incident_reports");
+    const latest = await getLatestReports("Car Crash Lawyer AI Incident Reports");
     
     if (latest.length === 0) {
-      console.log('📭 No reports found in incident_reports collection');
+      console.log('📭 No reports found in Car Crash Lawyer AI Incident Reports collection');
       return;
     }
     
