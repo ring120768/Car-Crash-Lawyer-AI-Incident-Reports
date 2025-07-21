@@ -3,6 +3,12 @@ const { db } = require('./firebase');
 
 async function submitIncidentReport(userId, vehicleMake, vehicleModel, voiceTranscriptionUrl, imagesUrl) {
   try {
+    // Validate that user exists first
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+
     const incidentReportData = {
       user_id: userId,  // USER_ID passed as parameter
       vehicle_make: vehicleMake,
