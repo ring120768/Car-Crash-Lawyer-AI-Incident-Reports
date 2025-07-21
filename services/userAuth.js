@@ -65,8 +65,40 @@ async function updateUser(userId, updateData) {
   }
 }
 
+// Sign-up logic for creating a new user (using Admin SDK)
+async function signUp(email, password, fullName = 'User Full Name') {
+  try {
+    // Create user with Firebase Admin Auth
+    const userRecord = await admin.auth().createUser({
+      email: email,
+      password: password,
+      displayName: fullName,
+    });
+
+    const userId = userRecord.uid;  // Get the created user's ID
+    console.log('✅ User signed up with ID:', userId);
+
+    // Store user details in Firestore (using existing collection structure)
+    const userRef = db.collection('users').doc(userId);
+    await userRef.set({
+      full_name: fullName,
+      email: email,
+      created_at: new Date(),
+      user_id: userId,
+    });
+
+    console.log('✅ User signed up and USER_ID stored in Firestore');
+    return { success: true, userId: userId };
+
+  } catch (error) {
+    console.error('❌ Error signing up:', error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   createUser,
   getUserById,
-  updateUser
+  updateUser,
+  signUp
 };
