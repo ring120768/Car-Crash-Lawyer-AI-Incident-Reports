@@ -1,122 +1,87 @@
+const admin = require("firebase-admin");
+const db = admin.firestore();
 
-const { db } = require('./services/firebase');
+const ENFORCE_ACCESS = process.env.ENFORCE_PRODUCT_ACCESS === "true";
 
-// Middleware to check if user has premium access
-async function requirePremium(req, res, next) {
+async function getUserAccess(userId) {
+  const snapshot = await db
+    .collection("Car Crash Lawyer AI User Data")
+    .where("user_id", "==", userId)
+    .orderBy("created", "desc")
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) throw new Error("No user data found for user_id");
+
+  const doc = snapshot.docs[0].data();
+  return doc.product_id || "standard";
+}
+
+async function premiumOnly(req, res, next) {
+  const userId = req.query.user_id;
+  if (!userId) return res.status(400).send("Missing user_id");
+
   try {
-    const userId = req.body.userId || req.params.userId || req.query.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ 
-        error: 'User ID required',
-        premium: false 
-      });
+    const productId = await getUserAccess(userId);
+
+    if (!ENFORCE_ACCESS) {
+      if (productId !== "premium") {
+        console.log(`[ACCESS][BETA-MODE] Standard user (${userId}) accessed Premium route.`);
+      }
+      return next();
     }
 
-    // Check user's premium status in Firebase
-    const userDoc = await db.collection('Car Crash Lawyer AI User Sign Up').doc(userId).get();
-    
-    if (!userDoc.exists) {
-      return res.status(404).json({ 
-        error: 'User not found',
-        premium: false 
-      });
+    if (productId === "premium") {
+      return next();
+    } else {
+      return res.status(403).send("Upgrade required to access this feature");
     }
 
-    const userData = userDoc.data();
-    const isPremium = userData.is_premium === true || userData.subscription_status === 'active';
-
-    if (!isPremium) {
-      return res.status(403).json({ 
-        error: 'Premium subscription required',
-        premium: false,
-        message: 'This feature requires a premium subscription'
-      });
-    }
-
-    // User has premium access, continue to next middleware/route
-    req.user = { ...userData, userId };
-    next();
-
-  } catch (error) {
-    console.error('❌ Error checking premium status:', error.message);
-    return res.status(500).json({ 
-      error: 'Error validating premium status',
-      premium: false 
-    });
+  } catch (err) {
+    console.error("Access check failed:", err.message);
+    return res.status(500).send("Error checking access level");
   }
 }
 
-// Function to check premium status without blocking request
-async function checkPremiumStatus(userId) {
+// Additional helper functions for managing premium access
+async function checkUserProductId(userId) {
   try {
-    const userDoc = await db.collection('Car Crash Lawyer AI User Sign Up').doc(userId).get();
-    
-    if (!userDoc.exists) {
-      return { premium: false, exists: false };
-    }
-
-    const userData = userDoc.data();
-    const isPremium = userData.is_premium === true || userData.subscription_status === 'active';
-
-    return { 
-      premium: isPremium, 
-      exists: true,
-      user: userData 
-    };
-
+    const productId = await getUserAccess(userId);
+    return { success: true, productId };
   } catch (error) {
-    console.error('❌ Error checking premium status:', error.message);
-    return { premium: false, exists: false, error: error.message };
-  }
-}
-
-// Function to upgrade user to premium
-async function upgradeToPremium(userId, subscriptionData = {}) {
-  try {
-    const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(userId);
-    
-    const updateData = {
-      is_premium: true,
-      subscription_status: 'active',
-      premium_upgraded_at: new Date(),
-      ...subscriptionData
-    };
-
-    await userRef.update(updateData);
-    
-    console.log('✅ User upgraded to premium:', userId);
-    return { success: true, premium: true };
-
-  } catch (error) {
-    console.error('❌ Error upgrading user to premium:', error.message);
     return { success: false, error: error.message };
   }
 }
 
-// Function to revoke premium access
-async function revokePremium(userId) {
+async function upgradeUserToProduct(userId, productId = "premium") {
   try {
-    const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(userId);
-    
-    await userRef.update({
-      is_premium: false,
-      subscription_status: 'cancelled',
-      premium_revoked_at: new Date()
-    });
-    
-    console.log('✅ Premium access revoked for user:', userId);
-    return { success: true, premium: false };
+    const snapshot = await db
+      .collection("Car Crash Lawyer AI User Data")
+      .where("user_id", "==", userId)
+      .limit(1)
+      .get();
 
+    if (snapshot.empty) {
+      throw new Error("No user data found for user_id");
+    }
+
+    const docRef = snapshot.docs[0].ref;
+    await docRef.update({
+      product_id: productId,
+      updated: new Date()
+    });
+
+    console.log(`✅ User ${userId} upgraded to ${productId}`);
+    return { success: true, productId };
   } catch (error) {
-    console.error('❌ Error revoking premium access:', error.message);
+    console.error(`❌ Error upgrading user to ${productId}:`, error.message);
     return { success: false, error: error.message };
   }
 }
 
 module.exports = {
-  requirePremium,
-  checkPremiumStatus,
-  upgradeToPremium,
-  revokePremium
+  premiumOnly,
+  getUserAccess,
+  checkUserProductId,
+  upgradeUserToProduct
 };
