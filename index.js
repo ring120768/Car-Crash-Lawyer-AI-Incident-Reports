@@ -1,22 +1,18 @@
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
-const cron = require('node-cron');
-const generateReports = require('./jobs/generateReports');
-
-dotenv.config();
+const express = require("express");
+const path = require("path");
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.static("public"));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+app.get("/signup", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "signup.html"));
 });
 
-// Run every day at 2:00 AM (Replit time)
-cron.schedule('0 2 * * *', () => {
-  console.log('⏰ Running daily report generator...');
-  generateReports();
+app.get("/report", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "report.html"));
+});
+
+const PORT = 5000; // Recommended port
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });

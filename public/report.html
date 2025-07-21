@@ -1,586 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Crash Lawyer AI - Incident Report</title>
+  <script>
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get('user_id') || '';
+      const productId = params.get('product_id') || '';
+      const formUrl = `https://form.typeform.com/to/WvM2ejru?user_id=${userId}&product_id=${productId}`;
+      document.getElementById('typeform').src = formUrl;
+    }
+  </script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #005D80, #00A5D1);
+      color: white;
+      text-align: center;
+    }
+    .hero {
+      padding: 3rem 1rem 1rem;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    iframe {
+      width: 100%;
+      height: 85vh;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>Incident Report Form</h1>
+    <p>Powered by Car Crash Lawyer AI</p>
+  </div>
+  <iframe id="typeform" allow="camera; microphone; autoplay; encrypted-media;"></iframe>
+</body>
+</html>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Crash Lawyer AI - Incident Report</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .user-info {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px auto;
-            max-width: 800px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .premium-badge {
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            color: #333;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        .standard-badge {
-            background: #6c757d;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .form-section {
-            margin-bottom: 30px;
-        }
-
-        .form-section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 5px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: bold;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        textarea {
-            height: 120px;
-            resize: vertical;
-        }
-
-        .file-upload {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            transition: border-color 0.3s;
-            cursor: pointer;
-        }
-
-        .file-upload:hover {
-            border-color: #667eea;
-        }
-
-        .file-upload.dragover {
-            border-color: #667eea;
-            background-color: #f8f9ff;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            width: 100%;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .premium-only {
-            opacity: 0.5;
-            pointer-events: none;
-            position: relative;
-        }
-
-        .premium-only::after {
-            content: "🔒 Premium Feature";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #FFD700;
-            color: #333;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .status-message {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-weight: bold;
-            text-align: center;
-            display: none;
-        }
-
-        .status-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid #667eea;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-            
-            .header h1 {
-                font-size: 2em;
-            }
-            
-            .user-info {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Crash Lawyer AI - Incident Report</title>
+  <script>
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get('user_id') || '';
+      const productId = params.get('product_id') || '';
+      const formUrl = `https://form.typeform.com/to/WvM2ejru?user_id=${userId}&product_id=${productId}`;
+      document.getElementById('typeform').src = formUrl;
+    }
+  </script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #005D80, #00A5D1);
+      color: white;
+      text-align: center;
+    }
+    .hero {
+      padding: 3rem 1rem 1rem;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    iframe {
+      width: 100%;
+      height: 85vh;
+      border: none;
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🚗 Car Crash Lawyer AI</h1>
-        <p>Document your incident with AI-powered assistance</p>
-    </div>
-
-    <div class="user-info" id="userInfo">
-        <div>
-            <strong>User ID:</strong> <span id="userIdDisplay">Loading...</span>
-        </div>
-        <div id="productBadge">
-            <span class="standard-badge">Standard</span>
-        </div>
-    </div>
-
-    <div class="container">
-        <form id="incidentReportForm">
-            <div class="form-section">
-                <h3>Vehicle Information</h3>
-                <div class="form-group">
-                    <label for="vehicleMake">Vehicle Make *</label>
-                    <select id="vehicleMake" required>
-                        <option value="">Select Make</option>
-                        <option value="Toyota">Toyota</option>
-                        <option value="Honda">Honda</option>
-                        <option value="Ford">Ford</option>
-                        <option value="Chevrolet">Chevrolet</option>
-                        <option value="BMW">BMW</option>
-                        <option value="Mercedes-Benz">Mercedes-Benz</option>
-                        <option value="Audi">Audi</option>
-                        <option value="Volkswagen">Volkswagen</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="vehicleModel">Vehicle Model *</label>
-                    <input type="text" id="vehicleModel" placeholder="e.g., Camry, Civic, F-150" required>
-                </div>
-                <div class="form-group">
-                    <label for="vehicleYear">Vehicle Year</label>
-                    <input type="number" id="vehicleYear" placeholder="e.g., 2020" min="1900" max="2024">
-                </div>
-            </div>
-
-            <div class="form-section">
-                <h3>Incident Details</h3>
-                <div class="form-group">
-                    <label for="incidentDescription">Describe the incident *</label>
-                    <textarea id="incidentDescription" placeholder="Please provide a detailed description of what happened..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="incidentDate">Date of Incident</label>
-                    <input type="date" id="incidentDate">
-                </div>
-                <div class="form-group">
-                    <label for="incidentLocation">Location</label>
-                    <input type="text" id="incidentLocation" placeholder="Street address or intersection">
-                </div>
-            </div>
-
-            <div class="form-section" id="voiceSection">
-                <h3>Voice Recording</h3>
-                <div class="form-group">
-                    <label>Record your voice description of the incident</label>
-                    <div class="file-upload" id="voiceUpload">
-                        <p>🎤 Click to record or upload audio file</p>
-                        <input type="file" id="voiceFile" accept="audio/*" style="display: none;">
-                        <button type="button" id="recordBtn" style="margin-top: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px;">Start Recording</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-section" id="imagesSection">
-                <h3>Photos and Evidence</h3>
-                <div class="form-group">
-                    <label>Upload photos of the incident</label>
-                    <div class="file-upload" id="imageUpload">
-                        <p>📷 Click to upload images or drag and drop</p>
-                        <input type="file" id="imageFiles" accept="image/*" multiple style="display: none;">
-                    </div>
-                    <div id="imagePreview" style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;"></div>
-                </div>
-            </div>
-
-            <div class="loading" id="loadingIndicator">
-                <p>Processing your report...</p>
-            </div>
-
-            <div class="status-message" id="statusMessage"></div>
-
-            <button type="submit" class="btn" id="submitBtn">
-                Submit Incident Report
-            </button>
-        </form>
-    </div>
-
-    <script>
-        // Global variables
-        let userId = null;
-        let productId = 'standard';
-        let mediaRecorder = null;
-        let audioChunks = [];
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            extractUserParams();
-            setupEventListeners();
-            checkPremiumFeatures();
-        });
-
-        function extractUserParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            userId = urlParams.get('user_id');
-            productId = urlParams.get('product_id') || 'standard';
-
-            const userIdDisplay = document.getElementById('userIdDisplay');
-            const productBadge = document.getElementById('productBadge');
-
-            if (userId) {
-                userIdDisplay.textContent = userId;
-                
-                if (productId === 'premium') {
-                    productBadge.innerHTML = '<span class="premium-badge">Premium ⭐</span>';
-                } else {
-                    productBadge.innerHTML = '<span class="standard-badge">Standard</span>';
-                }
-            } else {
-                userIdDisplay.textContent = 'No user ID provided';
-                showStatusMessage('Please log in to submit a report', 'error');
-                document.getElementById('submitBtn').disabled = true;
-            }
-
-            console.log('✅ User params loaded:', { userId, productId });
-        }
-
-        function checkPremiumFeatures() {
-            const premiumSections = ['voiceSection', 'imagesSection'];
-            
-            if (productId !== 'premium') {
-                premiumSections.forEach(sectionId => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        section.classList.add('premium-only');
-                    }
-                });
-            }
-        }
-
-        function setupEventListeners() {
-            // Form submission
-            document.getElementById('incidentReportForm').addEventListener('submit', handleFormSubmit);
-
-            // File uploads
-            document.getElementById('voiceUpload').addEventListener('click', () => {
-                if (productId === 'premium') {
-                    document.getElementById('voiceFile').click();
-                }
-            });
-
-            document.getElementById('imageUpload').addEventListener('click', () => {
-                if (productId === 'premium') {
-                    document.getElementById('imageFiles').click();
-                }
-            });
-
-            // Voice recording
-            document.getElementById('recordBtn').addEventListener('click', toggleRecording);
-
-            // File change handlers
-            document.getElementById('voiceFile').addEventListener('change', handleVoiceFile);
-            document.getElementById('imageFiles').addEventListener('change', handleImageFiles);
-
-            // Drag and drop for images
-            const imageUpload = document.getElementById('imageUpload');
-            imageUpload.addEventListener('dragover', handleDragOver);
-            imageUpload.addEventListener('drop', handleDrop);
-        }
-
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            
-            if (!userId) {
-                showStatusMessage('User ID is required', 'error');
-                return;
-            }
-
-            const formData = {
-                user_id: userId,
-                vehicle_make: document.getElementById('vehicleMake').value,
-                vehicle_model: document.getElementById('vehicleModel').value,
-                vehicle_year: document.getElementById('vehicleYear').value,
-                incident_description: document.getElementById('incidentDescription').value,
-                incident_date: document.getElementById('incidentDate').value,
-                incident_location: document.getElementById('incidentLocation').value,
-                voice_transcription_url: '', // Will be populated if voice file uploaded
-                images_url: '', // Will be populated if images uploaded
-                product_id: productId,
-                created_at: new Date().toISOString()
-            };
-
-            showLoading(true);
-            document.getElementById('submitBtn').disabled = true;
-
-            try {
-                // In a real implementation, you would send this to your backend API
-                console.log('📤 Submitting incident report:', formData);
-                
-                // Simulate API call
-                await simulateApiCall(formData);
-                
-                showStatusMessage('✅ Incident report submitted successfully!', 'success');
-                document.getElementById('incidentReportForm').reset();
-                document.getElementById('imagePreview').innerHTML = '';
-                
-            } catch (error) {
-                console.error('❌ Error submitting report:', error);
-                showStatusMessage('Error submitting report. Please try again.', 'error');
-            } finally {
-                showLoading(false);
-                document.getElementById('submitBtn').disabled = false;
-            }
-        }
-
-        async function simulateApiCall(data) {
-            // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // In a real app, replace this with actual API call:
-            // const response = await fetch('/api/incident-reports', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(data)
-            // });
-        }
-
-        function toggleRecording() {
-            const recordBtn = document.getElementById('recordBtn');
-            
-            if (productId !== 'premium') {
-                showStatusMessage('Voice recording requires premium subscription', 'error');
-                return;
-            }
-
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                recordBtn.textContent = 'Start Recording';
-                recordBtn.style.background = '#667eea';
-            } else {
-                startRecording();
-            }
-        }
-
-        async function startRecording() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    console.log('🎤 Recording completed:', audioUrl);
-                    showStatusMessage('Voice recording saved', 'success');
-                };
-
-                mediaRecorder.start();
-                document.getElementById('recordBtn').textContent = 'Stop Recording';
-                document.getElementById('recordBtn').style.background = '#dc3545';
-
-            } catch (error) {
-                console.error('❌ Error starting recording:', error);
-                showStatusMessage('Unable to access microphone', 'error');
-            }
-        }
-
-        function handleVoiceFile(e) {
-            const file = e.target.files[0];
-            if (file) {
-                console.log('🎤 Voice file selected:', file.name);
-                showStatusMessage('Voice file uploaded successfully', 'success');
-            }
-        }
-
-        function handleImageFiles(e) {
-            const files = Array.from(e.target.files);
-            displayImagePreviews(files);
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('dragover');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('dragover');
-            
-            if (productId !== 'premium') {
-                showStatusMessage('Image upload requires premium subscription', 'error');
-                return;
-            }
-
-            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-            displayImagePreviews(files);
-        }
-
-        function displayImagePreviews(files) {
-            const previewContainer = document.getElementById('imagePreview');
-            previewContainer.innerHTML = '';
-
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.width = '100%';
-                    img.style.height = '100px';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '8px';
-                    img.style.border = '2px solid #ddd';
-                    previewContainer.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
-
-            showStatusMessage(`${files.length} image(s) uploaded successfully`, 'success');
-        }
-
-        function showStatusMessage(message, type) {
-            const statusElement = document.getElementById('statusMessage');
-            statusElement.textContent = message;
-            statusElement.className = `status-message status-${type}`;
-            statusElement.style.display = 'block';
-
-            setTimeout(() => {
-                statusElement.style.display = 'none';
-            }, 5000);
-        }
-
-        function showLoading(show) {
-            document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
-        }
-    </script>
+  <div class="hero">
+    <h1>Incident Report Form</h1>
+    <p>Powered by Car Crash Lawyer AI</p>
+  </div>
+  <iframe id="typeform" allow="camera; microphone; autoplay; encrypted-media;"></iframe>
 </body>
-</html>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Crash Lawyer AI - Sign Up</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #005D80, #00A5D1);
+      color: white;
+      text-align: center;
+    }
+    .hero {
+      padding: 3rem 1rem;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    iframe {
+      width: 100%;
+      height: 80vh;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>Car Crash Lawyer AI</h1>
+    <p>Your Legal First Responder</p>
+    <p><strong>Accident? AI will have your insurance report covered in minutes.</strong></p>
+  </div>
+  <iframe src="https://form.typeform.com/to/b03aFxE0" allow="camera; microphone; autoplay; encrypted-media;"></iframe>
+</body>
+</html>const express = require("express");
+const path = require("path");
+
+const app = express();
+app.use(express.static("public"));
+
+app.get("/signup", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "signup.html"));
+});
+
+app.get("/report", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "report.html"));
+});
+
+const PORT = 5000; // Recommended port
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});
