@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Crash Lawyer AI - Sign Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .iframe-container {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+
+        .footer-text {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .logo {
+                font-size: 2em;
+            }
+            
+            iframe {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚗 Car Crash Lawyer AI</div>
+        <p class="tagline">Get expert legal assistance after your accident</p>
+        
+        <div class="iframe-container">
+            <!-- Replace this src with your actual sign-up form URL -->
+            <iframe 
+                src="https://your-signup-form-url.com/signup" 
+                title="Sign Up Form"
+                frameborder="0"
+                allowfullscreen>
+            </iframe>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">✓</div>
+                <span>AI-Powered Analysis</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✓</div>
+                <span>Instant Report Generation</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✓</div>
+                <span>Legal Expert Matching</span>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✓</div>
+                <span>24/7 Support</span>
+            </div>
+        </div>
+        
+        <p class="footer-text">
+            Already have an account? <a href="report.html" style="color: #667eea; text-decoration: none;">Create Report →</a>
+        </p>
+    </div>
+
+    <script>
+        // Handle iframe messages for signup completion
+        window.addEventListener('message', function(event) {
+            // Add your domain whitelist here for security
+            if (event.origin !== 'https://your-signup-form-url.com') {
+                return;
+            }
+            
+            if (event.data && event.data.type === 'signup_complete') {
+                const userId = event.data.userId;
+                const productId = event.data.productId || 'standard';
+                
+                console.log('✅ Signup completed:', { userId, productId });
+                
+                // Redirect to report page with user info
+                window.location.href = `report.html?user_id=${userId}&product_id=${productId}`;
+            }
+        });
+
+        // Optional: Add smooth scrolling and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                container.style.transition = 'all 0.6s ease';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
