@@ -36,24 +36,12 @@ app.get('/subscribe', (req, res) => {
 });
 
 // Init Firebase Admin
-let db;
 if (!admin.apps.length) {
-  try {
-    if (!process.env.FIREBASE_CREDENTIALS) {
-      console.warn('⚠️ FIREBASE_CREDENTIALS not set - Firestore features disabled');
-      db = null;
-    } else {
-      admin.initializeApp({
-        credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_CREDENTIALS)),
-      });
-      db = admin.firestore();
-      console.log('✅ Firebase Admin initialized');
-    }
-  } catch (error) {
-    console.error('❌ Firebase initialization error:', error.message);
-    db = null;
-  }
+  admin.initializeApp({
+    credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_CREDENTIALS)),
+  });
 }
+const db = admin.firestore();
 
 // Parse Stripe webhook payload as raw buffer
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => {
@@ -86,11 +74,6 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) =>
     const plan = priceMap[session.metadata.buy_button_id] || 'standard';
 
     // Update Firestore
-    if (!db) {
-      console.warn('⚠️ Firestore not available - skipping user update');
-      return;
-    }
-    
     db.collection('Car Crash Lawyer AI User Data')
       .where('email_text', '==', customerEmail)
       .get()
