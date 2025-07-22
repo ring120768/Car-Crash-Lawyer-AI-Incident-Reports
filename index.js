@@ -1,10 +1,39 @@
 const express = require('express');
+const path = require('path');
 const app = express();
+
+// Check if Stripe secrets are available
+if (!process.env.STRIPE_SECRET || !process.env.STRIPE_WEBHOOK_SECRET) {
+  console.error('❌ Stripe environment variables missing. Please check your Secrets.');
+  console.log('📋 Required: STRIPE_SECRET, STRIPE_WEBHOOK_SECRET');
+  process.exit(1);
+}
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
 const admin = require('firebase-admin');
 const bodyParser = require('body-parser');
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+// Serve static files
+app.use(express.static('public'));
+
+// Routes for HTML pages
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+
+app.get('/report', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'report.html'));
+});
+
+app.get('/subscribe', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
+});
 
 // Init Firebase Admin
 if (!admin.apps.length) {
@@ -67,6 +96,13 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) =>
   }
 
   res.status(200).end();
+});
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log('🔧 Stripe webhook endpoint: /webhook');
 });
 
 
