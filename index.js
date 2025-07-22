@@ -35,19 +35,6 @@ app.get('/subscribe', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
 });
 
-// Debug endpoint
-app.get('/debug', (req, res) => {
-  res.json({
-    status: 'Main server running',
-    environment: {
-      STRIPE_SECRET: process.env.STRIPE_SECRET ? 'Set' : 'Missing',
-      STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Missing',
-      FIREBASE_CREDENTIALS: process.env.FIREBASE_CREDENTIALS ? 'Set' : 'Missing'
-    },
-    firebase_db: db ? 'Connected' : 'Disabled'
-  });
-});
-
 // Init Firebase Admin
 let db;
 if (!admin.apps.length) {
