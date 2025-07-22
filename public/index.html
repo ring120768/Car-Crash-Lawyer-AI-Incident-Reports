@@ -1,78 +1,124 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Car Crash Lawyer AI - Home</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car Crash Lawyer AI</title>
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #005D80, #00A5D1);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #007acc, #00b4d8);
       color: white;
-      text-align: center;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
     }
-    .hero {
-      padding: 3rem 1rem;
-      max-width: 800px;
-    }
-    .hero h1 {
-      font-size: 3rem;
+
+    header img {
+      max-width: 120px;
       margin-bottom: 1rem;
     }
-    .hero p {
-      font-size: 1.4rem;
-      margin-bottom: 3rem;
-      line-height: 1.6;
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
     }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      margin-top: -0.5rem;
+      margin-bottom: 1.5rem;
+      font-weight: 400;
+      color: #d1ecf9;
+    }
+
+    p.tagline {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      font-weight: 500;
+    }
+
     .cta-buttons {
       display: flex;
-      gap: 2rem;
-      justify-content: center;
+      flex-direction: row;
+      gap: 1rem;
       flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2rem;
     }
+
     .cta-button {
-      display: inline-block;
-      padding: 1rem 2rem;
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-      text-decoration: none;
+      background-color: white;
+      color: #007acc;
+      padding: 0.75rem 1.5rem;
       border-radius: 8px;
-      font-size: 1.2rem;
+      border: none;
       font-weight: bold;
-      transition: background-color 0.3s ease;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      min-width: 160px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
+
     .cta-button:hover {
-      background-color: rgba(255, 255, 255, 0.3);
+      background-color: #e6f2fb;
       transform: translateY(-2px);
     }
-    .cta-button.primary {
-      background-color: #FF6B35;
-      border-color: #FF6B35;
+
+    .hidden {
+      display: none;
     }
-    .cta-button.primary:hover {
-      background-color: #E55A2B;
+
+    .login-form {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    input[type="password"] {
+      padding: 0.5rem;
+      border-radius: 5px;
+      border: none;
+      font-size: 1rem;
+      width: 200px;
+    }
+
+    .login-btn {
+      background-color: white;
+      color: #007acc;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.3s ease;
     }
   </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>Car Crash Lawyer AI</h1>
-    <p>Your Legal First Responder</p>
-    <p><strong>Accident? AI will have your insurance report covered in minutes.</strong></p>
-    <p>Get expert legal guidance and automated incident reporting powered by AI technology.</p>
-    
-    <div class="cta-buttons">
-      <a href="/signup" class="cta-button primary">Get Started</a>
-      <a href="/report" class="cta-button">File Incident Report</a>
-    </div>
+
+  <header>
+    <img src="logo.png" alt="Car Crash Lawyer AI Logo">
+  </header>
+
+  <h1>Car Crash Lawyer AI</h1>
+  <p class="subtitle">Legal support at the scene – fast, smart, AI-powered.</p>
+  <p class="tagline">Get help. Record evidence. Protect your rights.</p>
+
+  <div class="cta-buttons">
+    <button class="cta-button" onclick="window.location.href='https://your-signup-typeform-url.com'">Sign Up</button>
+    <button class="cta-button" onclick="window.location.href='https://your-incident-typeform-url.com'">Report an Incident</button>
   </div>
+
 </body>
 </html>
+
+
+
+

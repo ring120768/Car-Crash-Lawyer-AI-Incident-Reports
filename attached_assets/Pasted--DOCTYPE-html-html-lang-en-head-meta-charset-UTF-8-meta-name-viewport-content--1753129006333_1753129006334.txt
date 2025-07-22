@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car Crash Lawyer AI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, #0077b6, #0096c7);
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 800px;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.4rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .cta-button:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .cta-button.primary {
+      background-color: #ff6b35;
+      border-color: #ff6b35;
+    }
+
+    .cta-button.primary:hover {
+      background-color: #e5522a;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>Car Crash Lawyer AI</h1>
+    <p>Your Legal First Responder</p>
+    <p><strong>Accident? AI will have your insurance report covered in minutes.</strong></p>
+
+    <div class="cta-buttons">
+      <!-- Sign Up -->
+      <a 
+        id="signup-btn"
+        href="https://form.typeform.com/to/b03aFxEO#user_id=xxxxx&product_id=xxxxx" 
+        class="cta-button primary hidden" 
+        target="_blank"
+      >
+        Get Started
+      </a>
+
+      <!-- Incident Report -->
+      <a 
+        id="report-btn"
+        href="https://form.typeform.com/to/WvM2ejru#user_id=xxxxx&product_id=xxxxx" 
+        class="cta-button hidden" 
+        target="_blank"
+      >
+        File Incident Report
+      </a>
+
+      <!-- Demo Mode -->
+      <a 
+        href="https://form.typeform.com/to/XMBB3Xhq#user_id=xxxxx&product_id=xxxxx" 
+        class="cta-button" 
+        target="_blank"
+      >
+        Try Demo Mode
+      </a>
+
+      <!-- Admin Unlock -->
+      <button class="cta-button" onclick="unlockAdmin()">Admin Access</button>
+    </div>
+  </div>
+
+  <script>
+    const SIGNUP_KEY = 'signed_up';
+    const MASTER_KEY = 'letmein';
+
+    function showButtons() {
+      document.getElementById('signup-btn').classList.remove('hidden');
+      document.getElementById('report-btn').classList.remove('hidden');
+    }
+
+    function unlockAdmin() {
+      const key = prompt('Enter admin key:');
+      if (key === MASTER_KEY) {
+        localStorage.setItem(SIGNUP_KEY, 'true');
+        showButtons();
+        alert('✅ Admin access granted');
+      } else {
+        alert('❌ Incorrect key');
+      }
+    }
+
+    // Auto-show buttons if previously unlocked
+    if (localStorage.getItem(SIGNUP_KEY) === 'true') {
+      showButtons();
+    }
+  </script>
+</body>
+</html>
