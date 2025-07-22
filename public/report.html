@@ -7,17 +7,9 @@
   <script>
     window.onload = function () {
       const params = new URLSearchParams(window.location.search);
-      const isDemo = params.get('demo') === 'true';
-
-      let formUrl;
-      if (isDemo) {
-        formUrl = 'https://form.typeform.com/to/XMBB3Xhq';
-      } else {
-        const userId = params.get('user_id') || '';
-        const productId = params.get('product_id') || '';
-        formUrl = `https://form.typeform.com/to/WvM2ejru?user_id=${userId}&product_id=${productId}`;
-      }
-
+      const userId = params.get('user_id') || '';
+      const productId = params.get('product_id') || '';
+      const formUrl = `https://form.typeform.com/to/WvM2ejru?user_id=${userId}&product_id=${productId}`;
       document.getElementById('typeform').src = formUrl;
     }
   </script>
@@ -61,17 +53,9 @@
   <script>
     window.onload = function () {
       const params = new URLSearchParams(window.location.search);
-      const isDemo = params.get('demo') === 'true';
-
-      let formUrl;
-      if (isDemo) {
-        formUrl = 'https://form.typeform.com/to/XMBB3Xhq';
-      } else {
-        const userId = params.get('user_id') || '';
-        const productId = params.get('product_id') || '';
-        formUrl = `https://form.typeform.com/to/WvM2ejru?user_id=${userId}&product_id=${productId}`;
-      }
-
+      const userId = params.get('user_id') || '';
+      const productId = params.get('product_id') || '';
+      const formUrl = `https://form.typeform.com/to/WvM2ejru?user_id=${userId}&product_id=${productId}`;
       document.getElementById('typeform').src = formUrl;
     }
   </script>
