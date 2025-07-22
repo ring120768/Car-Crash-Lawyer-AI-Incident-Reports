@@ -1,18 +1,19 @@
 const express = require("express");
-const path = require("path");
-
 const app = express();
+const path = require("path");
+const PORT = 3000;
+
+// Serve everything in the "public" directory
 app.use(express.static("public"));
 
-app.get("/signup", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "signup.html"));
+// Fallback route to serve index.html directly
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
-app.get("/report", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "report.html"));
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });
 
-const PORT = 5000; // Recommended port
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+
+
