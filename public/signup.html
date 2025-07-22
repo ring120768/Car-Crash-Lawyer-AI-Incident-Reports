@@ -115,27 +115,20 @@
   <!-- Firebase App -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
-
+  <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDTBqre2ZxxG8swTvsSGuc28ytuQYp-qKs",
+      apiKey: "AIzaSyDTBqre2ZxxG8swTvsSGuC28ytuQYp-qKs",
       authDomain: "car-crash-lawyer-ai.firebaseapp.com",
       projectId: "car-crash-lawyer-ai",
-      storageBucket: "car-crash-lawyer-ai.appspot.com",
+      storageBucket: "car-crash-lawyer-ai.firebasestorage.app",
       messagingSenderId: "473755120948",
       appId: "1:473755120948:web:fdea5724f722577befa161",
       measurementId: "G-Z4566CNYET"
     };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
     const form = document.getElementById('signup-form');
     const errorDiv = document.getElementById('error');
@@ -146,7 +139,7 @@
       const password = form.password.value;
 
       try {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await auth.createUserWithEmailAndPassword(email, password);
         window.location.href = 'incident.html';
       } catch (err) {
         errorDiv.textContent = err.message;
