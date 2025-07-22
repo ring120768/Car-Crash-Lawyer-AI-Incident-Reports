@@ -1,42 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Car Crash Lawyer AI - Sign Up</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - Car Crash Lawyer AI</title>
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #005D80, #00A5D1);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #007acc, #80d0f8);
       color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
       text-align: center;
+      padding: 2rem;
     }
-    .hero {
-      padding: 3rem 1rem;
+
+    nav {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      gap: 10px;
     }
-    .hero h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .hero p {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-    }
-    iframe {
-      width: 100%;
-      height: 80vh;
+
+    nav button, nav a {
+      background-color: #007acc;
       border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    nav button:hover, nav a:hover {
+      background-color: #005f9e;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-wrapper {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+      text-align: left;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    button.signup {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      background-color: white;
+      color: #007acc;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+
+    button.signup:hover {
+      background-color: #e0f0ff;
+    }
+
+    .error {
+      color: #ffcccc;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>Car Crash Lawyer AI</h1>
-    <p>Your Legal First Responder</p>
-    <p><strong>Accident? AI will have your insurance report covered in minutes.</strong></p>
+  <nav>
+    <button onclick="window.location.href='index.html'">Home</button>
+  </nav>
+
+  <div class="form-wrapper">
+    <h1>Sign Up</h1>
+    <form id="signup-form">
+      <label for="email">Email</label>
+      <input type="email" id="email" required />
+      <label for="password">Password</label>
+      <input type="password" id="password" required />
+      <button type="submit" class="signup">Create Account</button>
+    </form>
+    <div id="error" class="error"></div>
   </div>
-  <iframe src="https://form.typeform.com/to/b03aFxE0" allow="camera; microphone; autoplay; encrypted-media;"></iframe>
+
+  <!-- Firebase App -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+    apiKey: "AIzaSyDTBqre2ZxxG8swTvsSGuC28ytuQYp-qKs",
+    authDomain: "car-crash-lawyer-ai.firebaseapp.com",
+    projectId: "car-crash-lawyer-ai",
+    storageBucket: "car-crash-lawyer-ai.firebasestorage.app",
+    messagingSenderId: "473755120948",
+    appId: "1:473755120948:web:fdea5724f722577befa161",
+    measurementId: "G-Z4566CNYET"
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const form = document.getElementById('signup-form');
+    const errorDiv = document.getElementById('error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = form.email.value;
+      const password = form.password.value;
+
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        window.location.href = 'incident.html';
+      } catch (err) {
+        errorDiv.textContent = err.message;
+      }
+    });
+  </script>
 </body>
 </html>
-

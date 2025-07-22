@@ -76,30 +76,19 @@
 </head>
 <body>
 
-  <!-- Logo -->
   <header>
     <img src="logo.png" alt="Car Crash Lawyer AI Logo">
   </header>
 
-  <!-- Main Heading -->
   <h1>Car Crash Lawyer AI</h1>
   <p class="subtitle">Legal support at the scene – fast, smart, AI-powered.</p>
   <p class="tagline">Get help. Record evidence. Protect your rights.</p>
 
-  <!-- Call to Action Buttons -->
   <div class="cta-buttons">
-    <button class="cta-button" onclick="window.location.href='signup.html'">Sign Up</button>
-    <button class="cta-button" onclick="window.location.href='incident.html'">Report an Incident</button>
-    <button class="cta-button" onclick="window.location.href='demo.html'">Try Demo</button>
+    <button class="cta-button" onclick="window.location.href='https://form.typeform.com/to/b03aFxEO#user_id=xxxxx&product_id=xxxxx'">Sign Up</button>
+    <button class="cta-button" onclick="window.location.href='https://form.typeform.com/to/WvM2ejru#user_id=xxxxx&product_id=xxxxx'">Report an Incident</button>
+    <button class="cta-button" onclick="window.location.href='https://form.typeform.com/to/XMBB3Xhq'">Try Demo</button>
   </div>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
