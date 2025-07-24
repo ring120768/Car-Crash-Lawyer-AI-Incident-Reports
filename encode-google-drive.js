@@ -1,6 +1,6 @@
 // encode-google-drive.js
 const fs = require('fs');
-const filename = 'car-crash-lawyers-ai-google-drive-uploader.json'; // (update if different)
+const filename = 'car-crash-lawyers-ai-google-drive.json'; // (update if different)
 const json = fs.readFileSync(filename, 'utf8');
 const oneLine = JSON.stringify(JSON.parse(json));
 const base64 = Buffer.from(oneLine).toString('base64');
