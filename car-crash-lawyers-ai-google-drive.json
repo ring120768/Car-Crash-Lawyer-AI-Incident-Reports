@@ -1,0 +1,27 @@
+// encode-google-drive.js
+// Use this script to base64-encode your Google Drive JSON credentials file
+
+const fs = require('fs');
+
+// 1. CHANGE THIS: Enter the FILENAME of your Google Drive JSON key below
+const filename = 'car-crash-lawyers-ai-google-drive-uploader.json'; // <-- UPDATE to your actual file name
+
+// 2. Read your JSON credentials (does NOT modify the original file)
+const json = fs.readFileSync(filename, 'utf8');
+
+// 3. Ensure it's a one-liner (removes all line breaks/formatting)
+const oneLine = JSON.stringify(JSON.parse(json));
+
+// 4. Encode as base64
+const base64 = Buffer.from(oneLine).toString('base64');
+
+// 5. Output the base64 string to your console (copy this for your Replit secret)
+console.log('\nPaste this into your Replit secret:');
+console.log('='.repeat(32));
+console.log(base64);
+console.log('='.repeat(32));
+
+// 6. Optionally, save as a text file for backup
+fs.writeFileSync('google_drive_creds_base64.txt', base64);
+
+console.log('\nSaved base64 string to google_drive_creds_base64.txt');

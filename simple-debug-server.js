@@ -1,7 +1,23 @@
-
 const express = require('express');
 const path = require('path');
 const app = express();
+
+// --- Firebase Admin Init with BASE64 secret ---
+const base64 = process.env.FIREBASE_CREDENTIALS_BASE64;
+let firebaseStatus = 'Missing';
+try {
+  if (!base64) throw new Error('Missing FIREBASE_CREDENTIALS_BASE64!');
+  const serviceAccount = JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
+
+  const admin = require('firebase-admin');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+  firebaseStatus = 'OK';
+} catch (err) {
+  console.error('[Firebase] Init Error:', err.message);
+  firebaseStatus = 'Init Error';
+}
 
 // Serve static files
 app.use(express.static('public'));
@@ -10,19 +26,15 @@ app.use(express.static('public'));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
 app.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'signup.html'));
 });
-
 app.get('/report', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'report.html'));
 });
-
 app.get('/subscribe', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
 });
-
 app.get('/incident', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'incident.html'));
 });
@@ -34,7 +46,7 @@ app.get('/debug', (req, res) => {
     environment: {
       STRIPE_SECRET: process.env.STRIPE_SECRET ? 'Set' : 'Missing',
       STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Missing',
-      FIREBASE_CREDENTIALS: process.env.FIREBASE_CREDENTIALS ? 'Set' : 'Missing'
+      FIREBASE_CREDENTIALS_BASE64: firebaseStatus
     }
   });
 });
