@@ -12,7 +12,16 @@ const app = express();
 if (!admin.apps.length) {
   const base64 = process.env.FIREBASE_CREDENTIALS_BASE64;
   if (!base64) throw new Error('Missing FIREBASE_CREDENTIALS_BASE64!');
-  const serviceAccount = JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
+  
+  let serviceAccount;
+  try {
+    const decoded = Buffer.from(base64, 'base64').toString('utf8');
+    serviceAccount = JSON.parse(decoded);
+  } catch (error) {
+    console.error('Error decoding FIREBASE_CREDENTIALS_BASE64:', error.message);
+    throw new Error(`Invalid FIREBASE_CREDENTIALS_BASE64: ${error.message}`);
+  }
+  
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 }
 const db = admin.firestore();
@@ -20,7 +29,15 @@ const db = admin.firestore();
 // --- GOOGLE DRIVE SETUP ---
 const driveBase64 = process.env.GOOGLE_DRIVE_CREDENTIALS_BASE64;
 if (!driveBase64) throw new Error('Missing GOOGLE_DRIVE_CREDENTIALS_BASE64!');
-const driveCredentials = JSON.parse(Buffer.from(driveBase64, 'base64').toString('utf8'));
+
+let driveCredentials;
+try {
+  const decoded = Buffer.from(driveBase64, 'base64').toString('utf8');
+  driveCredentials = JSON.parse(decoded);
+} catch (error) {
+  console.error('Error decoding GOOGLE_DRIVE_CREDENTIALS_BASE64:', error.message);
+  throw new Error(`Invalid GOOGLE_DRIVE_CREDENTIALS_BASE64: ${error.message}`);
+}
 
 const auth = new google.auth.GoogleAuth({
   credentials: driveCredentials,
