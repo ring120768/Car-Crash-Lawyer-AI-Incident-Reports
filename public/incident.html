@@ -87,13 +87,49 @@
             border-radius: 25px;
         }
 
-        
+        /* Navigation Bar */
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav button,
+        .nav a {
+            background-color: #007acc;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .nav button:hover,
+        .nav a:hover {
+            background-color: #005f9e;
+            transform: translateY(-1px);
+        }
 
         .hide { display: none; }
     </style>
 </head>
-<body class="min-h-screen p-4">
-    <div class="container mx-auto max-w-4xl">
+<body class="min-h-screen">
+    <!-- Navigation Bar -->
+    <div class="nav">
+        <button onclick="window.history.back()">← Back</button>
+        <a href="index.html">🏠 Home</a>
+    </div>
+
+    <div class="container mx-auto max-w-4xl p-4">
         <!-- Header -->
         <div class="glass-effect p-6 mb-6">
             <h1 class="text-3xl font-bold text-white text-center mb-2">🚗 Report Road Traffic Incident</h1>
@@ -149,8 +185,6 @@
                 </div>
             </div>
         </div>
-
-        
     </div>
 
     <!-- Scripts -->
@@ -248,37 +282,22 @@
         // Voice Recording Functionality
         async function requestMicrophonePermission() {
             try {
-                // Check if getUserMedia is supported
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     console.error('getUserMedia not supported');
                     return false;
                 }
                 
-                // Request microphone access
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: true,
                     video: false 
                 });
                 
-                // Permission granted - stop the stream immediately as we just needed permission
                 stream.getTracks().forEach(track => track.stop());
                 console.log('Microphone permission granted');
                 return true;
                 
             } catch (error) {
                 console.error('Microphone permission denied or error:', error.name, error.message);
-                
-                // Handle specific error types
-                if (error.name === 'NotAllowedError') {
-                    console.log('User denied microphone permission');
-                } else if (error.name === 'NotFoundError') {
-                    console.log('No microphone found');
-                } else if (error.name === 'NotReadableError') {
-                    console.log('Microphone already in use');
-                } else {
-                    console.log('Unknown microphone error:', error.name);
-                }
-                
                 return false;
             }
         }
@@ -356,7 +375,6 @@
         }
 
         function showTypeform() {
-            // Set the typeform URL - you can pass location data and transcription as parameters
             const lat = document.getElementById('latitude')?.value || '';
             const lng = document.getElementById('longitude')?.value || '';
             const address = document.getElementById('fullAddress')?.value || '';
@@ -383,7 +401,6 @@
                 typeformUrl += '?' + params.toString();
             }
             
-            // Open typeform in a new tab/window
             window.open(typeformUrl, '_blank');
         }
 
@@ -391,11 +408,9 @@
         document.getElementById('activateWhisperBtn').onclick = async function() {
             if (!isRecording) {
                 try {
-                    // Show status to user
                     document.getElementById('voiceStatus').textContent = 'Requesting microphone permission...';
                     document.getElementById('voiceStatus').style.display = 'block';
                     
-                    // First initialize speech recognition to avoid timing issues
                     const speechSupported = initializeVoiceRecognition();
                     if (!speechSupported) {
                         document.getElementById('voiceStatus').textContent = 'Speech recognition not supported. Proceeding to form...';
@@ -406,11 +421,9 @@
                         return;
                     }
                     
-                    // Now request microphone permission
                     const hasPermission = await requestMicrophonePermission();
                     
                     if (!hasPermission) {
-                        // User declined microphone permission - inform and go to typeform
                         document.getElementById('voiceStatus').textContent = 'Microphone permission denied. Proceeding without recording...';
                         setTimeout(() => {
                             document.getElementById('voiceStatus').style.display = 'none';
@@ -419,14 +432,11 @@
                         return;
                     }
 
-                    // User granted permission - try to start recording
                     document.getElementById('voiceStatus').textContent = 'Starting recording...';
                     
-                    // Add a small delay before starting recognition
                     setTimeout(() => {
                         try {
                             startRecording();
-                            // Show typeform after recording starts successfully
                             setTimeout(() => {
                                 showTypeform();
                             }, 1500);
@@ -457,11 +467,9 @@
             if (isRecording) {
                 stopRecording();
             }
-            // Show typeform immediately
             showTypeform();
         };
 
-        // Stop recording when user navigates away
         window.addEventListener('beforeunload', () => {
             if (isRecording) {
                 stopRecording();
