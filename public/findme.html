@@ -1,132 +1,695 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find My Location & Voice – Car Crash Lawyer AI</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    body { background: #eceffc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .container { max-width: 500px; margin: 60px auto; padding: 24px; background: #fff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.08);}
-    #map { height: 250px; border-radius: 6px; margin: 12px 0; }
-    .w3w { font-size: 1.2rem; font-weight: bold; color: #e74c3c; }
-    .rec-status { margin-top: 10px; color: #1e8449; font-size: 1rem;}
-    .btn { padding: 12px 20px; font-size: 1rem; border-radius: 8px; border: none; margin: 5px;}
-    .btn-record { background: #007acc; color: #fff;}
-    .btn-skip { background: #aaa; color: #fff;}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #007acc 0%, #005f9e 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.2rem;
+    }
+
+    .content {
+      padding: 40px 30px;
+    }
+
+    .section {
+      margin-bottom: 50px;
+      padding: 30px;
+      background: #f8f9ff;
+      border-radius: 16px;
+      border: 1px solid #e1e5e9;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+    }
+
+    .description {
+      color: #7f8c8d;
+      margin-bottom: 25px;
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 28px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      min-width: 160px;
+      justify-content: center;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(149, 165, 166, 0.3);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      color: white;
+      width: 100%;
+      font-size: 1.2rem;
+      padding: 18px 30px;
+      margin-top: 20px;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+    }
+
+    .result-container {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin-top: 25px;
+      border: 2px solid #e9ecef;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    #map {
+      height: 350px;
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .location-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .info-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-left: 4px solid #3498db;
+    }
+
+    .info-label {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 1.2rem;
+      color: #2c3e50;
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .w3w-card {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 20px 0;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+    }
+
+    .w3w-label {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .w3w-words {
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    .status-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 18px 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      border: 1px solid #c3e6cb;
+      font-weight: 500;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .status-message.recording {
+      background: #fff3cd;
+      color: #856404;
+      border-color: #ffeaa7;
+      animation: pulse 2s infinite;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-color: #f5c6cb;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .divider {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #e9ecef, transparent);
+      margin: 40px 0;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .nav-btn {
+      background: #007acc;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      background: #005f9e;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 10px;
+        border-radius: 16px;
+      }
+
+      .header {
+        padding: 30px 20px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .content {
+        padding: 30px 20px;
+      }
+
+      .section {
+        padding: 25px 20px;
+      }
+
+      .location-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Find My Location</h1>
-    <button id="findBtn" class="btn">📍 Find Me!</button>
-    <div id="result" style="display:none;">
-      <div id="map"></div>
-      <div class="w3w" id="w3w"></div>
-      <div>Lat: <span id="lat"></span> | Lng: <span id="lng"></span></div>
-    </div>
-    <hr style="margin:24px 0;">
-    <h2>Optional: Record a Voice Note</h2>
-    <button id="startWhisper" class="btn btn-record">Activate Whisper Voice Transcription</button>
-    <button id="skipWhisper" class="btn btn-skip">No Voice Recording</button>
-    <div id="recStatus" class="rec-status"></div>
+  <!-- Navigation -->
+  <div class="nav-buttons">
+    <a href="javascript:history.back()" class="nav-btn">← Back</a>
+    <a href="index.html" class="nav-btn">🏠 Home</a>
+  </div>
 
-    <form id="finalForm">
-      <input type="hidden" name="latitude" id="hiddenLat">
-      <input type="hidden" name="longitude" id="hiddenLng">
-      <input type="hidden" name="what3words" id="hiddenW3w">
-      <!-- Add other hidden or visible fields as needed -->
-      <button type="submit" class="btn btn-record" style="margin-top:24px;">Submit</button>
-    </form>
+  <div class="container">
+    <div class="header">
+      <h1>📍 Location & Voice Tool</h1>
+      <p>Pinpoint your exact location and record voice notes with precision</p>
+    </div>
+
+    <div class="content">
+      <!-- Location Section -->
+      <div class="section">
+        <h2 class="section-title">🗺️ Find Your Location</h2>
+        <p class="description">
+          Get your precise GPS coordinates and What3Words location. This helps emergency services find you quickly and accurately.
+        </p>
+        
+        <div class="btn-group">
+          <button id="findBtn" class="btn btn-primary">📍 Get My Location</button>
+        </div>
+        
+        <div id="locationResult" class="result-container" style="display:none;">
+          <div id="map"></div>
+          
+          <div class="w3w-card" id="w3wContainer">
+            <div class="w3w-label">What3Words Location</div>
+            <div class="w3w-words" id="w3wText">///loading.location.words</div>
+          </div>
+          
+          <div class="location-grid">
+            <div class="info-card">
+              <div class="info-label">Latitude</div>
+              <div class="info-value" id="latValue">--</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">Longitude</div>
+              <div class="info-value" id="lngValue">--</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">Accuracy</div>
+              <div class="info-value" id="accuracyValue">--</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">Address</div>
+              <div class="info-value" id="addressValue">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Voice Recording Section -->
+      <div class="section">
+        <h2 class="section-title">🎙️ Voice Recording</h2>
+        <p class="description">
+          Record a voice note to provide additional context or details about your location. This audio will be processed using AI transcription.
+        </p>
+        
+        <div class="btn-group">
+          <button id="startRecording" class="btn btn-danger">🎙️ Start Recording</button>
+          <button id="skipRecording" class="btn btn-secondary">⏭️ Skip Recording</button>
+        </div>
+        
+        <div id="recordingStatus" class="status-message" style="display: none;"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Submit Section -->
+      <div class="section">
+        <h2 class="section-title">✅ Submit Data</h2>
+        <p class="description">
+          Submit your location data and voice recording. The data will be processed and saved securely.
+        </p>
+        
+        <form id="dataForm">
+          <input type="hidden" name="latitude" id="hiddenLat">
+          <input type="hidden" name="longitude" id="hiddenLng">
+          <input type="hidden" name="what3words" id="hiddenW3w">
+          <input type="hidden" name="address" id="hiddenAddress">
+          <button type="submit" class="btn btn-success" id="submitBtn">🚀 Submit All Data</button>
+        </form>
+      </div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // --------- WHAT3WORDS/LOCATION SECTION -------------
-    let map, marker, userLat, userLng;
-    document.getElementById('findBtn').onclick = async () => {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        userLat = pos.coords.latitude;
-        userLng = pos.coords.longitude;
-        document.getElementById('lat').textContent = userLat.toFixed(6);
-        document.getElementById('lng').textContent = userLng.toFixed(6);
-        document.getElementById('hiddenLat').value = userLat;
-        document.getElementById('hiddenLng').value = userLng;
-        document.getElementById('result').style.display = 'block';
-        if (!map) {
-          map = L.map('map').setView([userLat, userLng], 17);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    // Global variables
+    let map, marker, userLat, userLng, userAddress;
+    let recorder, audioChunks = [], audioBlob = null;
+    
+    // DOM elements
+    const findBtn = document.getElementById('findBtn');
+    const locationResult = document.getElementById('locationResult');
+    const latValue = document.getElementById('latValue');
+    const lngValue = document.getElementById('lngValue');
+    const accuracyValue = document.getElementById('accuracyValue');
+    const addressValue = document.getElementById('addressValue');
+    const w3wText = document.getElementById('w3wText');
+    const startRecording = document.getElementById('startRecording');
+    const skipRecording = document.getElementById('skipRecording');
+    const recordingStatus = document.getElementById('recordingStatus');
+    const dataForm = document.getElementById('dataForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Location functionality
+    findBtn.addEventListener('click', async () => {
+      findBtn.innerHTML = '⏳ Getting Location...';
+      findBtn.disabled = true;
+
+      if (!navigator.geolocation) {
+        showError('Geolocation is not supported by this browser.');
+        resetFindButton();
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          await handleLocationSuccess(position);
+        },
+        (error) => {
+          handleLocationError(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 60000
         }
-        if (marker) marker.remove();
-        marker = L.marker([userLat, userLng]).addTo(map).bindPopup('You are here').openPopup();
+      );
+    });
 
-        // What3Words API call (update to your backend endpoint if needed)
-        const resp = await fetch(`/api/what3words?lat=${userLat}&lng=${userLng}`);
-        const data = await resp.json();
-        document.getElementById('w3w').textContent = data.words ? `///${data.words}` : '///error.getting.words';
-        document.getElementById('hiddenW3w').value = data.words ? data.words : '';
-      }, (err) => alert('Unable to find location!'));
-    };
+    async function handleLocationSuccess(position) {
+      userLat = position.coords.latitude;
+      userLng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
+      
+      // Update display
+      latValue.textContent = userLat.toFixed(6);
+      lngValue.textContent = userLng.toFixed(6);
+      accuracyValue.textContent = `±${Math.round(accuracy)}m`;
+      
+      // Update hidden form fields
+      document.getElementById('hiddenLat').value = userLat;
+      document.getElementById('hiddenLng').value = userLng;
+      
+      // Show results
+      locationResult.style.display = 'block';
+      
+      // Initialize map
+      initializeMap();
+      
+      // Get What3Words
+      await getWhat3Words();
+      
+      // Get address
+      await getAddress();
+      
+      // Update button
+      findBtn.innerHTML = '✅ Location Found';
+      findBtn.style.background = 'linear-gradient(135deg, #27ae60 0%, #229954 100%)';
+    }
 
-    // --------- WHISPER SECTION -------------
-    let recorder, audioChunks = [], audioBlob = null, whisperActive = false;
+    function handleLocationError(error) {
+      let message = 'Unable to get location. ';
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          message += 'Please enable location access and try again.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          message += 'Location information is unavailable.';
+          break;
+        case error.TIMEOUT:
+          message += 'Location request timed out.';
+          break;
+        default:
+          message += 'An unknown error occurred.';
+          break;
+      }
+      showError(message);
+      resetFindButton();
+    }
 
-    document.getElementById('startWhisper').onclick = async () => {
-      if (recorder && recorder.state === 'recording') return; // Already recording
-      audioChunks = [];
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = e => audioChunks.push(e.data);
-      recorder.onstart = () => {
-        whisperActive = true;
-        document.getElementById('recStatus').textContent = '🎙️ Recording... Speak now. Recording will stop on submit.';
-      };
-      recorder.onstop = () => {
-        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        document.getElementById('recStatus').textContent = '🎙️ Recording captured! Ready to submit.';
-        whisperActive = false;
-      };
-      recorder.start();
-    };
+    function resetFindButton() {
+      findBtn.innerHTML = '📍 Get My Location';
+      findBtn.disabled = false;
+      findBtn.style.background = '';
+    }
 
-    document.getElementById('skipWhisper').onclick = () => {
+    function initializeMap() {
+      if (!map) {
+        map = L.map('map').setView([userLat, userLng], 17);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+      } else {
+        map.setView([userLat, userLng], 17);
+      }
+      
+      if (marker) marker.remove();
+      marker = L.marker([userLat, userLng]).addTo(map)
+        .bindPopup('📍 You are here')
+        .openPopup();
+    }
+
+    async function getWhat3Words() {
+      try {
+        w3wText.textContent = 'Loading...';
+        const response = await fetch(`/api/what3words?lat=${userLat}&lng=${userLng}`);
+        const data = await response.json();
+        
+        if (data.words) {
+          const words = `///${data.words}`;
+          w3wText.textContent = words;
+          document.getElementById('hiddenW3w').value = data.words;
+        } else {
+          w3wText.textContent = '///error.getting.words';
+        }
+      } catch (error) {
+        console.error('What3Words error:', error);
+        w3wText.textContent = '///error.getting.words';
+      }
+    }
+
+    async function getAddress() {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}&zoom=18&addressdetails=1`
+        );
+        const result = await response.json();
+        
+        userAddress = result.display_name || 'Address not found';
+        addressValue.textContent = userAddress;
+        document.getElementById('hiddenAddress').value = userAddress;
+      } catch (error) {
+        console.error('Geocoding error:', error);
+        userAddress = 'Unable to fetch address';
+        addressValue.textContent = userAddress;
+      }
+    }
+
+    // Voice recording functionality
+    startRecording.addEventListener('click', async () => {
+      if (recorder && recorder.state === 'recording') {
+        stopRecording();
+        return;
+      }
+      
+      try {
+        audioChunks = [];
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recorder = new MediaRecorder(stream);
+        
+        recorder.ondataavailable = e => audioChunks.push(e.data);
+        
+        recorder.onstart = () => {
+          recordingStatus.style.display = 'block';
+          recordingStatus.className = 'status-message recording';
+          recordingStatus.textContent = '🎙️ Recording in progress... Speak clearly into your microphone.';
+          startRecording.innerHTML = '⏹️ Stop Recording';
+          startRecording.className = 'btn btn-secondary';
+        };
+        
+        recorder.onstop = () => {
+          audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          recordingStatus.className = 'status-message';
+          recordingStatus.textContent = '✅ Recording captured! Voice note is ready for submission.';
+          startRecording.innerHTML = '🎙️ Start New Recording';
+          startRecording.className = 'btn btn-danger';
+          
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+        };
+        
+        recorder.start();
+      } catch (error) {
+        console.error('Microphone access error:', error);
+        showRecordingError('Unable to access microphone. Please check your permissions.');
+      }
+    });
+
+    function stopRecording() {
       if (recorder && recorder.state === 'recording') {
         recorder.stop();
       }
-      document.getElementById('recStatus').textContent = 'Voice recording skipped.';
-      whisperActive = false;
-      audioBlob = null;
-    };
+    }
 
-    document.getElementById('finalForm').onsubmit = async (e) => {
+    skipRecording.addEventListener('click', () => {
+      if (recorder && recorder.state === 'recording') {
+        stopRecording();
+      }
+      
+      recordingStatus.style.display = 'block';
+      recordingStatus.className = 'status-message';
+      recordingStatus.textContent = '⏭️ Voice recording skipped. You can submit without audio.';
+      audioBlob = null;
+    });
+
+    // Form submission
+    dataForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // Stop recording if still running
+      
+      submitBtn.innerHTML = '⏳ Submitting...';
+      submitBtn.disabled = true;
+
+      // Stop recording if still active
       if (recorder && recorder.state === 'recording') {
         await new Promise(resolve => {
           recorder.onstop = resolve;
-          recorder.stop();
+          stopRecording();
         });
       }
 
-      // Prepare form data (fields + audio)
-      const formData = new FormData(document.getElementById('finalForm'));
+      // Prepare form data
+      const formData = new FormData(dataForm);
       if (audioBlob) {
         formData.append('audio', audioBlob, 'recording.webm');
       }
 
-      // Submit to your backend route (update if needed)
-      const resp = await fetch('/api/whisper-transcribe', {
-        method: 'POST',
-        body: formData
-      });
-      const result = await resp.json();
-      document.getElementById('recStatus').textContent = result.transcript
-        ? 'Transcription: ' + result.transcript
-        : 'Audio submitted!';
+      try {
+        const response = await fetch('/api/whisper-transcribe', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          showSuccess(result.transcript 
+            ? `✅ Success! Transcription: "${result.transcript}"` 
+            : '✅ Data submitted successfully!'
+          );
+          
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 3000);
+        } else {
+          throw new Error('Submission failed');
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        showError('Failed to submit data. Please try again.');
+        submitBtn.innerHTML = '🚀 Submit All Data';
+        submitBtn.disabled = false;
+      }
+    });
 
-      // Redirect, close, or show success as needed
-      // window.location.href = 'index.html'; // Optionally redirect
-    };
+    // Utility functions
+    function showError(message) {
+      recordingStatus.style.display = 'block';
+      recordingStatus.className = 'status-message error';
+      recordingStatus.textContent = message;
+    }
+
+    function showRecordingError(message) {
+      recordingStatus.style.display = 'block';
+      recordingStatus.className = 'status-message error';
+      recordingStatus.textContent = message;
+    }
+
+    function showSuccess(message) {
+      recordingStatus.style.display = 'block';
+      recordingStatus.className = 'status-message';
+      recordingStatus.textContent = message;
+    }
   </script>
 </body>
 </html>
-
