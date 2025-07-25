@@ -148,19 +148,7 @@
             </div>
         </div>
 
-        <!-- Incident Details Form -->
-        <div class="glass-effect p-6 mb-6">
-            <h2 class="text-2xl font-bold text-white mb-6">📝 Incident Details</h2>
-            <form id="incidentForm">
-                <label class="block text-sm font-medium text-white mb-1">Transcription:</label>
-                <div id="transcription" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black"></div>
-
-                <label class="block text-sm font-medium text-white mb-1">Incident Description:</label>
-                <textarea id="incidentDescription" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black" rows="4"></textarea>
-                <!-- ...existing form fields unchanged... -->
-                <!-- (paste the rest of your form here) -->
-            </form>
-        </div>
+        
     </div>
 
     <!-- Scripts -->
@@ -254,20 +242,16 @@
                 };
 
                 recognition.onresult = (event) => {
-                    let interimTranscript = '';
                     let finalTranscript = '';
 
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         const transcript = event.results[i][0].transcript;
                         if (event.results[i].isFinal) {
                             finalTranscript += transcript + ' ';
-                        } else {
-                            interimTranscript += transcript;
                         }
                     }
 
                     transcriptionText = finalTranscript;
-                    document.getElementById('transcription').textContent = finalTranscript + interimTranscript;
                 };
 
                 recognition.onerror = (event) => {
@@ -299,14 +283,6 @@
                 document.getElementById('voiceStatus').style.display = 'none';
                 document.getElementById('activateWhisperBtn').textContent = '🎤 Activate Whisper Voice';
                 document.getElementById('activateWhisperBtn').style.background = '#27ae60';
-
-                // If we have transcription, populate incident description
-                if (transcriptionText.trim()) {
-                    const incidentDesc = document.getElementById('incidentDescription');
-                    if (incidentDesc) {
-                        incidentDesc.value = transcriptionText.trim();
-                    }
-                }
             }
         }
 
