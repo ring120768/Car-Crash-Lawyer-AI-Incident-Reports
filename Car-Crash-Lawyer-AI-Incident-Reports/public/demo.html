@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up – Car Crash Lawyer AI</title>
+  <title>Try Demo – Car Crash Lawyer AI</title>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f7f9fa;
     }
+
     .nav {
       display: flex;
       align-items: center;
@@ -20,6 +21,7 @@
       position: relative;
       z-index: 10;
     }
+
     .nav button,
     .nav a {
       background-color: #007acc;
@@ -33,29 +35,34 @@
       text-decoration: none;
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
+
     .nav button:hover,
     .nav a:hover {
       background-color: #005f9e;
       transform: translateY(-1px);
     }
+
     iframe {
       width: 100vw;
-      height: calc(100vh - 58px);
+      height: calc(100vh - 58px); /* subtract nav height */
       border: none;
     }
   </style>
 </head>
 <body>
+
   <!-- Navigation Bar -->
   <div class="nav">
     <button onclick="window.history.back()">← Back</button>
     <a href="index.html">🏠 Home</a>
   </div>
-  <!-- Embedded sign‑up Typeform -->
-  <iframe
-    src="https://form.typeform.com/to/b03aFxEO"
+
+  <!-- Embedded Typeform -->
+  <iframe 
+    src="https://form.typeform.com/to/XMBB3Xhq"
     allow="camera; microphone; autoplay; encrypted-media;">
   </iframe>
+
 </body>
 </html>
 
