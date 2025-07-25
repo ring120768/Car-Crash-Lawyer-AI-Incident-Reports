@@ -48,20 +48,37 @@ const drive = google.drive({ version: 'v3', auth });
 app.get('/api/what3words', async (req, res) => {
   const { lat, lng } = req.query;
   const apiKey = process.env.WHAT3WORDS_API_KEY;
-  if (!lat || !lng || !apiKey) return res.status(400).json({ error: 'Missing parameters or API key' });
+  
+  console.log('What3Words API request:', { lat, lng, hasApiKey: !!apiKey });
+  
+  if (!lat || !lng) {
+    return res.status(400).json({ error: 'Missing lat or lng parameters' });
+  }
+  
+  if (!apiKey) {
+    console.error('WHAT3WORDS_API_KEY environment variable not set');
+    return res.status(500).json({ error: 'What3Words API key not configured' });
+  }
 
   try {
     const url = `https://api.what3words.com/v3/convert-to-3wa?coordinates=${lat},${lng}&key=${apiKey}`;
+    console.log('Making request to What3Words:', url.replace(apiKey, '[HIDDEN]'));
+    
     const response = await axios.get(url);
-    // Use the "words" field from the response
+    console.log('What3Words response:', response.data);
+    
     if (response.data && response.data.words) {
       res.json({ words: response.data.words });
     } else {
-      res.status(500).json({ error: 'No what3words found' });
+      console.error('What3Words response missing words field:', response.data);
+      res.status(500).json({ error: 'No what3words found in response' });
     }
   } catch (err) {
-    console.error('what3words API error:', err.message, err.response?.data);
-    res.status(500).json({ error: 'Failed to fetch what3words' });
+    console.error('what3words API error:', err.message);
+    if (err.response) {
+      console.error('What3Words error response:', err.response.status, err.response.data);
+    }
+    res.status(500).json({ error: 'Failed to fetch what3words', details: err.response?.data || err.message });
   }
 });
 
