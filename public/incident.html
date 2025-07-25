@@ -312,7 +312,17 @@
                 recognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
                     if (event.error === 'not-allowed') {
-                        alert('Microphone access denied. Please allow microphone access to use voice recording.');
+                        document.getElementById('voiceStatus').textContent = 'Microphone access blocked by browser. Proceeding to form...';
+                        setTimeout(() => {
+                            document.getElementById('voiceStatus').style.display = 'none';
+                            showTypeform();
+                        }, 2000);
+                    } else {
+                        document.getElementById('voiceStatus').textContent = 'Recording error. Proceeding to form...';
+                        setTimeout(() => {
+                            document.getElementById('voiceStatus').style.display = 'none';
+                            showTypeform();
+                        }, 2000);
                     }
                     stopRecording();
                 };
@@ -385,7 +395,18 @@
                     document.getElementById('voiceStatus').textContent = 'Requesting microphone permission...';
                     document.getElementById('voiceStatus').style.display = 'block';
                     
-                    // Request microphone permission and wait for response
+                    // First initialize speech recognition to avoid timing issues
+                    const speechSupported = initializeVoiceRecognition();
+                    if (!speechSupported) {
+                        document.getElementById('voiceStatus').textContent = 'Speech recognition not supported. Proceeding to form...';
+                        setTimeout(() => {
+                            document.getElementById('voiceStatus').style.display = 'none';
+                            showTypeform();
+                        }, 2000);
+                        return;
+                    }
+                    
+                    // Now request microphone permission
                     const hasPermission = await requestMicrophonePermission();
                     
                     if (!hasPermission) {
@@ -398,22 +419,27 @@
                         return;
                     }
 
-                    // User granted permission - initialize and start recording
-                    document.getElementById('voiceStatus').textContent = 'Microphone permission granted. Initializing...';
+                    // User granted permission - try to start recording
+                    document.getElementById('voiceStatus').textContent = 'Starting recording...';
                     
-                    if (initializeVoiceRecognition()) {
-                        startRecording();
-                        // Show typeform after recording starts
-                        setTimeout(() => {
-                            showTypeform();
-                        }, 2000);
-                    } else {
-                        document.getElementById('voiceStatus').textContent = 'Speech recognition not supported. Proceeding to form...';
-                        setTimeout(() => {
-                            document.getElementById('voiceStatus').style.display = 'none';
-                            showTypeform();
-                        }, 2000);
-                    }
+                    // Add a small delay before starting recognition
+                    setTimeout(() => {
+                        try {
+                            startRecording();
+                            // Show typeform after recording starts successfully
+                            setTimeout(() => {
+                                showTypeform();
+                            }, 1500);
+                        } catch (speechError) {
+                            console.error('Speech recognition start error:', speechError);
+                            document.getElementById('voiceStatus').textContent = 'Unable to start recording. Proceeding to form...';
+                            setTimeout(() => {
+                                document.getElementById('voiceStatus').style.display = 'none';
+                                showTypeform();
+                            }, 2000);
+                        }
+                    }, 500);
+                    
                 } catch (error) {
                     console.error('Error handling microphone permission:', error);
                     document.getElementById('voiceStatus').textContent = 'Error accessing microphone. Proceeding to form...';
