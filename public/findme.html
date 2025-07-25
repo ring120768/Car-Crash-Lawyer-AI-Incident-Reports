@@ -2,98 +2,129 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Find My Location - Car Crash Lawyer AI</title>
+  <title>Find My Location & Voice – Car Crash Lawyer AI</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body { background: #eceffc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .container { max-width: 500px; margin: 60px auto; padding: 24px; background: #fff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.08);}
     #map { height: 250px; border-radius: 6px; margin: 12px 0; }
     .w3w { font-size: 1.2rem; font-weight: bold; color: #e74c3c; }
-    .info-row { margin: 8px 0; }
-    .location-accuracy { font-size: 0.98rem; color: #fff; background: #27ae60; border-radius: 4px; padding: 4px 8px; display: inline-block; }
-    label { font-size: 0.95rem; color: #333; }
-    input { width: 100%; margin-top: 2px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background: #f8fafc; }
+    .rec-status { margin-top: 10px; color: #1e8449; font-size: 1rem;}
+    .btn { padding: 12px 20px; font-size: 1rem; border-radius: 8px; border: none; margin: 5px;}
+    .btn-record { background: #007acc; color: #fff;}
+    .btn-skip { background: #aaa; color: #fff;}
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Find My Location</h1>
-    <button id="findBtn">📍 Find Me!</button>
+    <button id="findBtn" class="btn">📍 Find Me!</button>
     <div id="result" style="display:none;">
-      <div class="w3w" id="w3w">///loading.location.words</div>
       <div id="map"></div>
-      <div class="info-row location-accuracy" id="accuracyInfo">
-        <strong>Location Accuracy:</strong> <span id="accuracyValue">Unknown</span>
-      </div>
-      <div class="info-row">
-        <label>Latitude:</label>
-        <input id="latInput" type="text" readonly>
-      </div>
-      <div class="info-row">
-        <label>Longitude:</label>
-        <input id="lngInput" type="text" readonly>
-      </div>
-      <div class="info-row">
-        <label>Full Address:</label>
-        <input id="fullAddress" type="text" readonly>
-      </div>
+      <div class="w3w" id="w3w"></div>
+      <div>Lat: <span id="lat"></span> | Lng: <span id="lng"></span></div>
     </div>
+    <hr style="margin:24px 0;">
+    <h2>Optional: Record a Voice Note</h2>
+    <button id="startWhisper" class="btn btn-record">Activate Whisper Voice Transcription</button>
+    <button id="skipWhisper" class="btn btn-skip">No Voice Recording</button>
+    <div id="recStatus" class="rec-status"></div>
+
+    <form id="finalForm">
+      <input type="hidden" name="latitude" id="hiddenLat">
+      <input type="hidden" name="longitude" id="hiddenLng">
+      <input type="hidden" name="what3words" id="hiddenW3w">
+      <!-- Add other hidden or visible fields as needed -->
+      <button type="submit" class="btn btn-record" style="margin-top:24px;">Submit</button>
+    </form>
   </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    let map, marker, accuracyCircle;
-
+    // --------- WHAT3WORDS/LOCATION SECTION -------------
+    let map, marker, userLat, userLng;
     document.getElementById('findBtn').onclick = async () => {
-      document.getElementById('w3w').textContent = '///loading.location.words';
       navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude, lng = pos.coords.longitude, accuracy = pos.coords.accuracy;
-        // Update map info
-        document.getElementById('latInput').value = lat.toFixed(6);
-        document.getElementById('lngInput').value = lng.toFixed(6);
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        document.getElementById('lat').textContent = userLat.toFixed(6);
+        document.getElementById('lng').textContent = userLng.toFixed(6);
+        document.getElementById('hiddenLat').value = userLat;
+        document.getElementById('hiddenLng').value = userLng;
         document.getElementById('result').style.display = 'block';
-
-        // Accuracy indicator
-        let accText = `±${Math.round(accuracy)}m`;
-        let accColor = '#27ae60';
-        if (accuracy > 50) accColor = '#e67e22';
-        if (accuracy > 100) accColor = '#e74c3c';
-        document.getElementById('accuracyValue').textContent = accText;
-        document.getElementById('accuracyInfo').style.background = accColor;
-
-        // Map logic
         if (!map) {
-          map = L.map('map').setView([lat, lng], 17);
+          map = L.map('map').setView([userLat, userLng], 17);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         }
         if (marker) marker.remove();
-        marker = L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
-        if (accuracyCircle) accuracyCircle.remove();
-        accuracyCircle = L.circle([lat, lng], {
-          radius: accuracy,
-          fillColor: accColor,
-          color: accColor,
-          fillOpacity: 0.18,
-          weight: 1
-        }).addTo(map);
+        marker = L.marker([userLat, userLng]).addTo(map).bindPopup('You are here').openPopup();
 
-        // What3Words API call (use your backend endpoint)
-        try {
-          const resp = await fetch(`/api/what3words?lat=${lat}&lng=${lng}`);
-          const data = await resp.json();
-          document.getElementById('w3w').textContent = data.words ? `///${data.words}` : '///error.getting.words';
-        } catch {
-          document.getElementById('w3w').textContent = '///error.getting.words';
-        }
-
-        // Reverse Geocode for address (OpenStreetMap Nominatim)
-        try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-          const result = await response.json();
-          document.getElementById('fullAddress').value = result.display_name || '';
-        } catch {
-          document.getElementById('fullAddress').value = 'Unable to fetch address';
-        }
+        // What3Words API call (update to your backend endpoint if needed)
+        const resp = await fetch(`/api/what3words?lat=${userLat}&lng=${userLng}`);
+        const data = await resp.json();
+        document.getElementById('w3w').textContent = data.words ? `///${data.words}` : '///error.getting.words';
+        document.getElementById('hiddenW3w').value = data.words ? data.words : '';
       }, (err) => alert('Unable to find location!'));
+    };
+
+    // --------- WHISPER SECTION -------------
+    let recorder, audioChunks = [], audioBlob = null, whisperActive = false;
+
+    document.getElementById('startWhisper').onclick = async () => {
+      if (recorder && recorder.state === 'recording') return; // Already recording
+      audioChunks = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e => audioChunks.push(e.data);
+      recorder.onstart = () => {
+        whisperActive = true;
+        document.getElementById('recStatus').textContent = '🎙️ Recording... Speak now. Recording will stop on submit.';
+      };
+      recorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        document.getElementById('recStatus').textContent = '🎙️ Recording captured! Ready to submit.';
+        whisperActive = false;
+      };
+      recorder.start();
+    };
+
+    document.getElementById('skipWhisper').onclick = () => {
+      if (recorder && recorder.state === 'recording') {
+        recorder.stop();
+      }
+      document.getElementById('recStatus').textContent = 'Voice recording skipped.';
+      whisperActive = false;
+      audioBlob = null;
+    };
+
+    document.getElementById('finalForm').onsubmit = async (e) => {
+      e.preventDefault();
+      // Stop recording if still running
+      if (recorder && recorder.state === 'recording') {
+        await new Promise(resolve => {
+          recorder.onstop = resolve;
+          recorder.stop();
+        });
+      }
+
+      // Prepare form data (fields + audio)
+      const formData = new FormData(document.getElementById('finalForm'));
+      if (audioBlob) {
+        formData.append('audio', audioBlob, 'recording.webm');
+      }
+
+      // Submit to your backend route (update if needed)
+      const resp = await fetch('/api/whisper-transcribe', {
+        method: 'POST',
+        body: formData
+      });
+      const result = await resp.json();
+      document.getElementById('recStatus').textContent = result.transcript
+        ? 'Transcription: ' + result.transcript
+        : 'Audio submitted!';
+
+      // Redirect, close, or show success as needed
+      // window.location.href = 'index.html'; // Optionally redirect
     };
   </script>
 </body>

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Try Demo – Car Crash Lawyer AI</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body {
       margin: 0;
@@ -42,10 +43,52 @@
       transform: translateY(-1px);
     }
 
+    /* Find Me styling */
+    .demo-location-container {
+      max-width: 480px;
+      margin: 32px auto 16px auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+      padding: 28px 20px 20px 20px;
+      text-align: center;
+    }
+    .btn-findme {
+      background: #3498db;
+      color: white;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.15rem;
+      font-weight: bold;
+      margin-top: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(52,152,219,0.06);
+    }
+    .btn-findme:hover {
+      background: #2980b9;
+    }
+    .w3w {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #e74c3c;
+      margin: 15px 0 8px 0;
+    }
+    #demoMap { height: 220px; border-radius: 7px; margin: 10px 0; }
+    .demo-latlng { color: #555; font-size: 0.97rem; }
+
+    /* Responsive iframe */
     iframe {
       width: 100vw;
-      height: calc(100vh - 58px); /* subtract nav height */
+      height: calc(100vh - 58px - 335px); /* nav + FindMe est. height */
       border: none;
+      margin-top: 0;
+      display: block;
+    }
+
+    @media (max-width: 700px) {
+      .demo-location-container { max-width: 98vw; padding: 14px 4vw 14px 4vw;}
+      iframe { height: 320px; min-height: 45vh; }
     }
   </style>
 </head>
@@ -57,12 +100,54 @@
     <a href="index.html">🏠 Home</a>
   </div>
 
+  <!-- What3Words "Find Me" Feature for Demo -->
+  <div class="demo-location-container">
+    <h2 style="font-size:1.3rem; font-weight:600; color:#007acc;">Try What3Words in Demo Mode</h2>
+    <button id="findMeDemoBtn" class="btn-findme">📍 Find Me!</button>
+    <div id="demoResult" style="display:none;">
+      <div id="demoMap"></div>
+      <div class="w3w" id="demoW3W">///waiting...</div>
+      <div class="demo-latlng">
+        Lat: <span id="demoLat"></span> &nbsp; | &nbsp; Lng: <span id="demoLng"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- Embedded Typeform -->
   <iframe 
     src="https://form.typeform.com/to/XMBB3Xhq"
     allow="camera; microphone; autoplay; encrypted-media;">
   </iframe>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let demoMap, demoMarker;
+
+    document.getElementById('findMeDemoBtn').onclick = async () => {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        document.getElementById('demoLat').textContent = lat.toFixed(6);
+        document.getElementById('demoLng').textContent = lng.toFixed(6);
+        document.getElementById('demoResult').style.display = 'block';
+        if (!demoMap) {
+          demoMap = L.map('demoMap').setView([lat, lng], 17);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(demoMap);
+        }
+        if (demoMarker) demoMarker.remove();
+        demoMarker = L.marker([lat, lng]).addTo(demoMap).bindPopup('You are here').openPopup();
+
+        // What3Words API call (use your backend endpoint)
+        try {
+          const resp = await fetch(`/api/what3words?lat=${lat}&lng=${lng}`);
+          const data = await resp.json();
+          document.getElementById('demoW3W').textContent = data.words ? `///${data.words}` : '///error.getting.words';
+        } catch (err) {
+          document.getElementById('demoW3W').textContent = '///error.getting.words';
+        }
+      }, (err) => alert('Unable to find location!'));
+    };
+  </script>
 </body>
 </html>
+
 
