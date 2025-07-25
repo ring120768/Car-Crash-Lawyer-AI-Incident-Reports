@@ -482,16 +482,8 @@
                 typeformUrl += '?' + params.toString();
             }
             
-            // Show typeform section
-            document.getElementById('typeformSection').style.display = 'block';
-            document.getElementById('typeformEmbed').innerHTML = `
-                <iframe src="${typeformUrl}" 
-                    allow="camera; microphone; autoplay; encrypted-media;">
-                </iframe>
-            `;
-            
-            // Scroll to typeform
-            document.getElementById('typeformSection').scrollIntoView({ behavior: 'smooth' });
+            // Open typeform in new window
+            window.open(typeformUrl, '_blank');
         }
 
         // Button Event Handlers
