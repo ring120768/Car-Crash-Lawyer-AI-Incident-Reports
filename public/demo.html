@@ -175,6 +175,22 @@
             margin-bottom: 20px;
         }
 
+        /* Typeform container */
+        .typeform-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .typeform-container iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 8px;
+        }
+
         .hide { display: none; }
     </style>
 </head>
@@ -247,15 +263,11 @@
             </div>
         </div>
 
-        <!-- Demo Completion Section -->
-        <div id="demoComplete" class="glass-effect p-6" style="display:none;">
-            <h2 class="text-2xl font-bold text-white text-center mb-4">✅ Demo Complete!</h2>
-            <p class="text-white text-center mb-4">You've experienced our location finding and voice recording features.</p>
-            <div class="text-center">
-                <button onclick="window.location.href='signup.html'" class="btn-findme">
-                    Sign Up for Real Service
-                </button>
-            </div>
+        <!-- Typeform Section -->
+        <div id="typeformSection" class="typeform-container" style="display:none;">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📝 Demo Incident Report Form</h2>
+            <p class="text-gray-600 mb-4">Complete the demo form below to experience our incident reporting process:</p>
+            <div id="typeformEmbed"></div>
         </div>
     </div>
 
@@ -405,7 +417,7 @@
                     document.getElementById('voiceStatus').textContent = 'Demo recording complete!';
                     setTimeout(() => {
                         document.getElementById('voiceStatus').style.display = 'none';
-                        showDemoComplete();
+                        showTypeform();
                     }, 2000);
                     stopRecording();
                 };
@@ -438,10 +450,48 @@
             }
         }
 
-        function showDemoComplete() {
-            document.getElementById('actionSection').style.display = 'none';
-            document.getElementById('locationContainer').style.display = 'none';
-            document.getElementById('demoComplete').style.display = 'block';
+        function showTypeform() {
+            // Get location data if available
+            const lat = document.getElementById('latitude')?.value || '';
+            const lng = document.getElementById('longitude')?.value || '';
+            const address = document.getElementById('fullAddress')?.value || '';
+            const what3words = document.getElementById('what3wordsText')?.textContent || '';
+            
+            // Build typeform URL with demo parameters
+            let typeformUrl = 'https://form.typeform.com/to/WvM2ejru';
+            const params = new URLSearchParams();
+            
+            // Add demo identifier
+            params.append('demo', 'true');
+            
+            if (lat && lng) {
+                params.append('latitude', lat);
+                params.append('longitude', lng);
+            }
+            if (address && address !== 'Demo address location') {
+                params.append('address', encodeURIComponent(address));
+            }
+            if (what3words && what3words !== '///loading.location.words' && what3words !== '///demo.location.example') {
+                params.append('what3words', encodeURIComponent(what3words));
+            }
+            if (transcriptionText.trim()) {
+                params.append('transcription', encodeURIComponent(transcriptionText.trim()));
+            }
+            
+            if (params.toString()) {
+                typeformUrl += '?' + params.toString();
+            }
+            
+            // Show typeform section
+            document.getElementById('typeformSection').style.display = 'block';
+            document.getElementById('typeformEmbed').innerHTML = `
+                <iframe src="${typeformUrl}" 
+                    allow="camera; microphone; autoplay; encrypted-media;">
+                </iframe>
+            `;
+            
+            // Scroll to typeform
+            document.getElementById('typeformSection').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Button Event Handlers
@@ -456,7 +506,7 @@
                         document.getElementById('voiceStatus').textContent = 'Demo: Speech recognition not supported. Continuing...';
                         setTimeout(() => {
                             document.getElementById('voiceStatus').style.display = 'none';
-                            showDemoComplete();
+                            showTypeform();
                         }, 2000);
                         return;
                     }
@@ -467,7 +517,7 @@
                         document.getElementById('voiceStatus').textContent = 'Demo: Microphone permission denied. That\'s okay for demo!';
                         setTimeout(() => {
                             document.getElementById('voiceStatus').style.display = 'none';
-                            showDemoComplete();
+                            showTypeform();
                         }, 2000);
                         return;
                     }
@@ -482,7 +532,7 @@
                                 document.getElementById('voiceStatus').textContent = 'Demo recording complete!';
                                 setTimeout(() => {
                                     document.getElementById('voiceStatus').style.display = 'none';
-                                    showDemoComplete();
+                                    showTypeform();
                                 }, 2000);
                             }, 5000);
                         } catch (speechError) {
@@ -490,7 +540,7 @@
                             document.getElementById('voiceStatus').textContent = 'Demo: Unable to start recording. Continuing...';
                             setTimeout(() => {
                                 document.getElementById('voiceStatus').style.display = 'none';
-                                showDemoComplete();
+                                showTypeform();
                             }, 2000);
                         }
                     }, 500);
@@ -500,12 +550,12 @@
                     document.getElementById('voiceStatus').textContent = 'Demo: Error accessing microphone. Continuing...';
                     setTimeout(() => {
                         document.getElementById('voiceStatus').style.display = 'none';
-                        showDemoComplete();
+                        showTypeform();
                     }, 2000);
                 }
             } else {
                 stopRecording();
-                showDemoComplete();
+                showTypeform();
             }
         };
 
@@ -513,7 +563,7 @@
             if (isRecording) {
                 stopRecording();
             }
-            showDemoComplete();
+            showTypeform();
         };
 
         // Stop recording when user navigates away
