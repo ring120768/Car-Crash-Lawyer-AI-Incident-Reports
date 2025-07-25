@@ -1,3 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Crash Lawyer AI - Report Incident</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .glass-effect {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
 <body class="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-blue-600 flex items-center justify-center py-10">
   <div class="w-full max-w-3xl mx-auto space-y-8">
 
@@ -66,7 +81,67 @@
     <div class="glass-effect p-6 mb-6 rounded-2xl shadow-xl bg-white/70">
       <h2 class="text-2xl font-bold text-blue-800 mb-6 flex items-center">📝 Incident Details</h2>
       <form id="incidentForm" class="space-y-4">
-        <!-- ...your existing form fields go here... -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="vehicleMake" class="block text-sm font-medium text-blue-900 mb-1">Vehicle Make</label>
+            <input type="text" id="vehicleMake" name="vehicleMake" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Toyota">
+          </div>
+          <div>
+            <label for="vehicleModel" class="block text-sm font-medium text-blue-900 mb-1">Vehicle Model</label>
+            <input type="text" id="vehicleModel" name="vehicleModel" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Camry">
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="driverName" class="block text-sm font-medium text-blue-900 mb-1">Driver Name</label>
+            <input type="text" id="driverName" name="driverName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your full name">
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-blue-900 mb-1">Email Address</label>
+            <input type="email" id="email" name="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your.email@example.com">
+          </div>
+        </div>
+
+        <div>
+          <label for="incidentDescription" class="block text-sm font-medium text-blue-900 mb-1">Incident Description</label>
+          <textarea id="incidentDescription" name="incidentDescription" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Please describe what happened..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="incidentDate" class="block text-sm font-medium text-blue-900 mb-1">Incident Date</label>
+            <input type="date" id="incidentDate" name="incidentDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div>
+            <label for="incidentTime" class="block text-sm font-medium text-blue-900 mb-1">Incident Time</label>
+            <input type="time" id="incidentTime" name="incidentTime" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+        </div>
+
+        <div>
+          <label for="otherParties" class="block text-sm font-medium text-blue-900 mb-1">Other Parties Involved</label>
+          <textarea id="otherParties" name="otherParties" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Names, contact info, insurance details of other parties..."></textarea>
+        </div>
+
+        <div>
+          <label for="witnesses" class="block text-sm font-medium text-blue-900 mb-1">Witnesses</label>
+          <textarea id="witnesses" name="witnesses" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Witness contact information..."></textarea>
+        </div>
+
+        <div>
+          <label for="policeReport" class="block text-sm font-medium text-blue-900 mb-1">Police Report Number (if applicable)</label>
+          <input type="text" id="policeReport" name="policeReport" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Police report reference number">
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <input type="checkbox" id="consent" name="consent" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+          <label for="consent" class="text-sm text-blue-900">I consent to processing of this incident report data</label>
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          🚀 Submit Incident Report
+        </button>
       </form>
     </div>
   </div>
@@ -213,6 +288,7 @@
     });
   </script>
 </body>
+</html>
 
 
 
