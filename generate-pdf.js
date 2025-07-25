@@ -3,24 +3,29 @@ const axios = require('axios');
 const fs = require('fs');
 
 // --- Config ---
-const PDFCO_API_KEY = process.env.PDFCO_API_KEY; // Set this as a Replit Secret
-const DOCX_TEMPLATE_PATH = './Car Crash Lawyer AI Incident Report .docx'; // Your DOCX template
-const OUTPUT_PDF_PATH = './output_incident_report.pdf'; // Output file
+const PDFCO_API_KEY = process.env.PDFCO_API_KEY; // Set as Replit Secret
+const DOCX_TEMPLATE_PATH = './Car Crash Lawyer AI Incident Report .docx'; // Path to DOCX template
+const OUTPUT_PDF_PATH = './output_incident_report.pdf'; // Where to save the PDF
 
-// --- Data to Fill ---
+// --- Fill these with your actual data/fields ---
 const dataToFill = {
-  // Add key:value pairs matching your template placeholders
-  // For example:
   "user_full_name": "Ian Ring",
   "incident_date": "2025-07-23",
-  // ...etc, all your fields
+  // Add all your fields...
 };
 
-// --- PDF.co API call ---
 async function fillAndDownloadPDF() {
-  // Read DOCX as base64
-  const docxData = fs.readFileSync(DOCX_TEMPLATE_PATH).toString('base64');
+  // Read DOCX template as base64
+  let docxData;
   try {
+    docxData = fs.readFileSync(DOCX_TEMPLATE_PATH).toString('base64');
+  } catch (err) {
+    console.error(`❌ Could not read DOCX template: ${DOCX_TEMPLATE_PATH}`);
+    return;
+  }
+
+  try {
+    // PDF.co API: replace text in DOCX template
     const response = await axios.post(
       'https://api.pdf.co/v1/pdf/edit/replace-text',
       {
@@ -38,16 +43,22 @@ async function fillAndDownloadPDF() {
     );
 
     if (response.data && response.data.url) {
-      // Download PDF file
+      // Download the PDF file from PDF.co
       const pdfFile = await axios.get(response.data.url, { responseType: 'arraybuffer' });
       fs.writeFileSync(OUTPUT_PDF_PATH, pdfFile.data);
       console.log('✅ PDF created at', OUTPUT_PDF_PATH);
     } else {
-      console.error('❌ PDF.co error:', response.data);
+      console.error('❌ PDF.co did not return a PDF URL:', response.data);
     }
   } catch (err) {
-    console.error('❌ PDF generation failed:', err.response ? err.response.data : err);
+    if (err.response) {
+      console.error('❌ PDF.co API error:', err.response.data);
+    } else {
+      console.error('❌ PDF generation failed:', err.message);
+    }
   }
 }
 
 fillAndDownloadPDF();
+
+
