@@ -1,126 +1,215 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Incident Report - Car Crash Lawyer AI</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f4f4;
-    }
-    .container {
-      max-width: 600px;
-      margin: 80px auto;
-      padding: 30px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #179f9a;
-    }
-    #debug {
-      color: #d32f2f;
-      font-size: 14px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .hide { display: none; }
-  </style>
-</head>
-<body>
-  <div class="container" id="main-container">
-    <h1>Incident Reporting</h1>
-    <p id="status-text">Checking your access...</p>
-    <!-- Typeform embed goes here when access granted -->
-    <div id="typeform-embed" class="hide"></div>
-    <div id="debug"></div>
-  </div>
+<body class="min-h-screen p-4 bg-gradient-to-b from-blue-600 to-blue-400">
+<div class="container mx-auto max-w-4xl">
+    <!-- Header -->
+    <div class="glass-effect p-6 mb-6">
+        <h1 class="text-3xl font-bold text-white text-center mb-2">🚗 Report Road Traffic Incident</h1>
+        <p class="text-white text-center opacity-90">Secure, AI-powered incident documentation</p>
+    </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+    <!-- Button Group: Find Me + Whisper Controls -->
+    <div class="flex flex-wrap gap-3 justify-center mb-4">
+        <button id="findMeBtn" class="btn-findme">📍 Find Me!</button>
+        <button id="startWhisper" class="btn-whisper" type="button">Activate Whisper Voice Transcription</button>
+        <button id="skipWhisper" class="btn-skip-whisper" type="button">No Voice Recording</button>
+    </div>
+    <div id="recStatus" class="rec-status text-center mb-3" aria-live="polite"></div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDTBqre2ZxxG8swTvsSGuC28ytuQYp-qKs",
-      authDomain: "car-crash-lawyer-ai.firebaseapp.com",
-      projectId: "car-crash-lawyer-ai",
-      storageBucket: "car-crash-lawyer-ai.appspot.com",
-      messagingSenderId: "473755120948",
-      appId: "1:473755120948:web:fdea5724f722577befa161",
-      measurementId: "G-Z4566CNYET"
+    <!-- Location Section -->
+    <div id="locationContainer" class="location-container" style="display:none;">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">📍 Incident Location</h2>
+        <div class="loading-spinner" id="loadingSpinner"></div>
+        <div id="locationInfo" style="display: none;">
+            <div id="what3wordsDisplay" class="what3words-display">
+                <div class="text-sm opacity-75 mb-2">what3words location:</div>
+                <div id="what3wordsText">///loading.location.words</div>
+            </div>
+            <div style="display:flex; justify-content:center;">
+                <div id="map" style="height:300px;width:100%;max-width:600px;min-width:280px;border-radius:10px;box-shadow:0 2px 10px rgba(52,152,219,0.07);"></div>
+            </div>
+            <div class="location-accuracy" id="accuracyInfo" style="margin-top:16px;">
+                <strong>Location Accuracy:</strong> <span id="accuracyValue">Unknown</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Latitude:</label>
+                    <input type="text" id="latitude" class="w-full px-3 py-2 border border-gray-300 rounded-md" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Longitude:</label>
+                    <input type="text" id="longitude" class="w-full px-3 py-2 border border-gray-300 rounded-md" readonly>
+                </div>
+            </div>
+            <!-- ACCESSIBLE ADDRESS BLOCK -->
+            <div class="mt-6" role="group" aria-labelledby="fullAddressLabel">
+                <label id="fullAddressLabel" class="block text-lg font-semibold text-black mb-2" for="fullAddressText">
+                    <span aria-hidden="true">🗺️</span> Full Address (Auto-filled)
+                </label>
+                <div id="fullAddressText"
+                    tabindex="0"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    style="background:#f3f5ff; border:2px solid #667eea; border-radius:7px; padding:14px; font-size:1.15rem; font-weight:500; color:#222; min-height:48px; outline:none; box-shadow:0 1px 4px rgba(102,126,234,0.12);"
+                >Waiting for address...</div>
+                <button type="button" onclick="copyAddress()" class="mt-2 px-3 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-800 focus:outline focus:ring-2 focus:ring-blue-500">Copy Address</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incident Details Form -->
+    <div class="glass-effect p-6 mb-6">
+        <h2 class="text-2xl font-bold text-white mb-6">📝 Incident Details</h2>
+        <form id="incidentForm">
+            <!-- ...your existing form fields here... -->
+        </form>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map, marker, accuracyCircle, userLocation = null;
+let recorder, audioChunks = [], audioBlob = null, whisperActive = false;
+
+// Find Me Button
+document.getElementById('findMeBtn').onclick = function() {
+    const loading = document.getElementById('loadingSpinner');
+    const locationContainer = document.getElementById('locationContainer');
+    const locationInfo = document.getElementById('locationInfo');
+    locationContainer.style.display = 'block';
+    loading.style.display = 'block';
+    locationInfo.style.display = 'none';
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude, accuracy = pos.coords.accuracy;
+        userLocation = { lat, lng, accuracy };
+
+        document.getElementById('latitude').value = lat.toFixed(6);
+        document.getElementById('longitude').value = lng.toFixed(6);
+
+        let accText = `±${Math.round(accuracy)}m`;
+        let accColor = '#27ae60';
+        if (accuracy > 50) accColor = '#e67e22';
+        if (accuracy > 100) accColor = '#e74c3c';
+        document.getElementById('accuracyValue').textContent = accText;
+        document.getElementById('accuracyInfo').style.background = accColor;
+
+        if (!map) {
+            map = L.map('map').setView([lat, lng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+        if (marker) marker.remove();
+        marker = L.marker([lat, lng]).addTo(map).bindPopup('Incident Location').openPopup();
+        if (accuracyCircle) accuracyCircle.remove();
+        accuracyCircle = L.circle([lat, lng], {
+            radius: accuracy,
+            fillColor: accColor,
+            color: accColor,
+            fillOpacity: 0.18,
+            weight: 1
+        }).addTo(map);
+
+        locationInfo.style.display = 'block';
+        loading.style.display = 'none';
+
+        // What3Words
+        try {
+            const resp = await fetch(`/api/what3words?lat=${lat}&lng=${lng}`);
+            const data = await resp.json();
+            document.getElementById('what3wordsText').textContent = data.words ? `///${data.words}` : '///error.getting.words';
+        } catch {
+            document.getElementById('what3wordsText').textContent = '///error.getting.words';
+        }
+
+        // Reverse Geocode for address
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            const result = await response.json();
+            document.getElementById('fullAddressText').textContent = result.display_name || 'Address not found';
+        } catch {
+            document.getElementById('fullAddressText').textContent = 'Unable to fetch address';
+        }
+    }, (err) => {
+        loading.style.display = 'none';
+        alert('Unable to get your location. Please enable location access.');
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
+};
+
+// Copy address for accessibility
+function copyAddress() {
+    const el = document.getElementById('fullAddressText');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(el.textContent);
+        el.focus();
+        el.setAttribute('aria-live','assertive');
+        el.textContent += "  (Copied!)";
+        setTimeout(()=>el.textContent = el.textContent.replace("  (Copied!)",""),1200);
+    }
+}
+
+// Whisper Voice Recording
+document.getElementById('startWhisper').onclick = async () => {
+    if (recorder && recorder.state === 'recording') return;
+    audioChunks = [];
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => audioChunks.push(e.data);
+    recorder.onstart = () => {
+        whisperActive = true;
+        document.getElementById('recStatus').textContent = '🎙️ Recording... Speak now. Recording will stop on submit.';
     };
+    recorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        document.getElementById('recStatus').textContent = '🎙️ Recording captured! Ready to submit.';
+        whisperActive = false;
+    };
+    recorder.start();
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    const statusText = document.getElementById('status-text');
-    const typeformDiv = document.getElementById('typeform-embed');
-    const debugDiv = document.getElementById('debug');
-
-    // Show debug info
-    function showDebug(msg) {
-      debugDiv.textContent = msg;
-      debugDiv.style.display = 'block';
+document.getElementById('skipWhisper').onclick = () => {
+    if (recorder && recorder.state === 'recording') {
+        recorder.stop();
     }
+    document.getElementById('recStatus').textContent = 'Voice recording skipped.';
+    whisperActive = false;
+    audioBlob = null;
+};
 
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        statusText.textContent = "You need to sign in first.";
-        showDebug("Not signed in – redirecting...");
-        setTimeout(() => window.location.href = "signup.html", 1000);
-        return;
-      }
-
-      try {
-        const userRef = db.collection('Car Crash Lawyer AI User Data').doc(user.uid);
-        const userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-          statusText.textContent = "User record not found. Please subscribe first.";
-          showDebug("Firestore doc missing for UID: " + user.uid);
-          setTimeout(() => window.location.href = "subscribe.html", 1000);
-          return;
+// Incident form submit: stop recording, attach audio
+document.getElementById('incidentForm').addEventListener('submit', async function(e) {
+    if (recorder && recorder.state === 'recording') {
+        await new Promise(resolve => {
+            recorder.onstop = resolve;
+            recorder.stop();
+        });
+    }
+    const formData = new FormData(this);
+    if (audioBlob) {
+        formData.append('audio', audioBlob, 'recording.webm');
+    }
+    try {
+        const response = await fetch('/api/incident-report', {
+            method: 'POST',
+            body: formData
+        });
+        if (response.ok) {
+            alert('✅ Incident report submitted successfully! You will receive an email with your report shortly.');
+            window.location.href = 'index.html';
+        } else {
+            const errorData = await response.text();
+            throw new Error(errorData);
         }
-
-        const data = userSnap.data();
-        const subscription = data.product_id || "standard";
-        const allowed = ["standard", "premium", "family", "business"];
-
-        if (!allowed.includes(subscription)) {
-          statusText.textContent = "Subscription required to access this feature.";
-          showDebug("Subscription not allowed: " + subscription);
-          setTimeout(() => window.location.href = "subscribe.html", 1200);
-          return;
-        }
-
-        // ACCESS GRANTED – SHOW TYPEFORM
-        statusText.textContent = "Access granted! Please complete your incident report below:";
-        showDebug("Access granted for: " + user.email);
-
-        // --- Embed your Typeform here ---
-        typeformDiv.classList.remove('hide');
-        typeformDiv.innerHTML = `
-          <iframe src="https://form.typeform.com/to/WvM2ejru?user_id=${user.uid}"
-            width="100%" height="600" frameborder="0"
-            style="border:1px solid #ccc; border-radius:10px; margin-top:15px;">
-          </iframe>
-        `;
-
-      } catch (err) {
-        statusText.textContent = "Error loading your access. Try again.";
-        showDebug("Error: " + err.message);
-      }
-    });
-  </script>
+    } catch (error) {
+        console.error('Error submitting report:', error);
+        alert('❌ Failed to submit report. Please try again.');
+    }
+});
+</script>
 </body>
-</html>
+
+
+
+
+
 
 
 
