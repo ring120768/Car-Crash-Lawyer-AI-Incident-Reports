@@ -17,22 +17,39 @@
         #map { height: 300px; width: 100%; border-radius: 8px; margin: 15px 0; }
         .what3words-display { background: #e74c3c; color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 24px; font-weight: bold; margin: 15px 0; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);}
         .location-accuracy { background: #27ae60; color: white; padding: 10px; border-radius: 6px; font-size: 14px; margin: 10px 0; }
-        .btn-findme { background: #3498db; color: white; padding: 16px 30px; border: none; border-radius: 12px; font-size: 1.4rem; font-weight: bold; margin: 0 auto 18px; display: block; cursor: pointer; box-shadow: 0 2px 8px rgba(52,152,219,0.08);}
-        .btn-findme:hover { background: #2980b9; }
+        .btn-findme { 
+            background: #3498db; 
+            color: white; 
+            padding: 16px 40px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1.4rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(52,152,219,0.3);
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+        .btn-findme:hover { 
+            background: #2980b9; 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52,152,219,0.4);
+        }
         .btn-location { display:none; }
         .loading-spinner { display: none; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
         @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
 
-        /* New Button Styles */
+        /* Whisper Button Styles */
         .btn-whisper {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
             border-radius: 12px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            margin: 0 6px; /* Spacing between buttons */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            min-width: 180px;
             display: inline-block;
         }
 
@@ -42,7 +59,9 @@
         }
 
         #activateWhisperBtn:hover {
-            background: #2196F3;
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
         }
 
         #dontRecordBtn {
@@ -52,14 +71,21 @@
 
         #dontRecordBtn:hover {
             background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
         }
 
         /* Voice Status Indicator */
         #voiceStatus {
             display: none;
-            color: white;
+            color: #fff;
             text-align: center;
-            margin-top: 10px;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
         }
 
     </style>
@@ -72,18 +98,25 @@
             <p class="text-white text-center opacity-90">Secure, AI-powered incident documentation</p>
         </div>
 
-        <!-- Find Me Button (NEW) -->
-        <button id="findMeBtn" class="btn-findme">
-            📍 Find Me!
-        </button>
-
-        <!-- Whisper Voice Buttons -->
-        <div>
-            <button id="activateWhisperBtn" class="btn-whisper">🎤 Activate Whisper Voice</button>
-            <button id="dontRecordBtn" class="btn-whisper">🚫 Don't Record</button>
+        <!-- Action Buttons Section -->
+        <div class="glass-effect p-6 mb-6">
+            <div class="text-center space-y-4">
+                <!-- Find Me Button -->
+                <div>
+                    <button id="findMeBtn" class="btn-findme">
+                        📍 Find Me!
+                    </button>
+                </div>
+                
+                <!-- Whisper Voice Buttons -->
+                <div class="flex justify-center space-x-4">
+                    <button id="activateWhisperBtn" class="btn-whisper">🎤 Activate Whisper Voice</button>
+                    <button id="dontRecordBtn" class="btn-whisper">🚫 Don't Record</button>
+                </div>
+                
+                <div id="voiceStatus" class="text-white font-semibold">Recording...</div>
+            </div>
         </div>
-
-        <div id="voiceStatus">Recording...</div>
 
         <!-- Location Section -->
         <div id="locationContainer" class="location-container" style="display:none;">
