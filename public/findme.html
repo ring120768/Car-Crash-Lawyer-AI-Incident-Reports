@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,128 +6,497 @@
   <title>Find My Location & Voice – Car Crash Lawyer AI</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    body { background: #eceffc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .container { max-width: 500px; margin: 60px auto; padding: 24px; background: #fff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.08);}
-    #map { height: 250px; border-radius: 6px; margin: 12px 0; }
-    .w3w { font-size: 1.2rem; font-weight: bold; color: #e74c3c; }
-    .rec-status { margin-top: 10px; color: #1e8449; font-size: 1rem;}
-    .btn { padding: 12px 20px; font-size: 1rem; border-radius: 8px; border: none; margin: 5px;}
-    .btn-record { background: #007acc; color: #fff;}
-    .btn-skip { background: #aaa; color: #fff;}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .main-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #007acc 0%, #005f9e 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .content {
+      padding: 40px 30px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section h2 {
+      font-size: 1.4rem;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-tertiary {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      color: white;
+    }
+
+    .btn-tertiary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(149, 165, 166, 0.3);
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      color: white;
+      width: 100%;
+      justify-content: center;
+      font-size: 1.1rem;
+      padding: 16px 24px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.3);
+    }
+
+    #result {
+      background: #f8f9fa;
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+      border: 2px solid #e9ecef;
+    }
+
+    #map {
+      height: 300px;
+      border-radius: 12px;
+      margin: 16px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .location-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .info-card {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-left: 4px solid #3498db;
+    }
+
+    .info-label {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      font-weight: 600;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .w3w {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 16px 0;
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+    }
+
+    .w3w .label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .w3w .words {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    .rec-status {
+      background: #d4edda;
+      color: #155724;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 16px;
+      border: 1px solid #c3e6cb;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .rec-status.recording {
+      background: #fff3cd;
+      color: #856404;
+      border-color: #ffeaa7;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .button-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .divider {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #e9ecef, transparent);
+      margin: 32px 0;
+    }
+
+    @media (max-width: 600px) {
+      .main-container {
+        margin: 10px;
+        border-radius: 16px;
+      }
+
+      .header {
+        padding: 24px 20px;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .content {
+        padding: 24px 20px;
+      }
+
+      .location-info {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Find My Location</h1>
-    <button id="findBtn" class="btn">📍 Find Me!</button>
-    <div id="result" style="display:none;">
-      <div id="map"></div>
-      <div class="w3w" id="w3w"></div>
-      <div>Lat: <span id="lat"></span> | Lng: <span id="lng"></span></div>
+  <div class="main-container">
+    <div class="header">
+      <h1>📍 Location & Voice Recorder</h1>
+      <p>Pinpoint your exact location and record voice notes</p>
     </div>
-    <hr style="margin:24px 0;">
-    <h2>Optional: Record a Voice Note</h2>
-    <button id="startWhisper" class="btn btn-record">Activate Whisper Voice Transcription</button>
-    <button id="skipWhisper" class="btn btn-skip">No Voice Recording</button>
-    <div id="recStatus" class="rec-status"></div>
 
-    <form id="finalForm">
-      <input type="hidden" name="latitude" id="hiddenLat">
-      <input type="hidden" name="longitude" id="hiddenLng">
-      <input type="hidden" name="what3words" id="hiddenW3w">
-      <!-- Add other hidden or visible fields as needed -->
-      <button type="submit" class="btn btn-record" style="margin-top:24px;">Submit</button>
-    </form>
+    <div class="content">
+      <!-- Location Section -->
+      <div class="section">
+        <h2>🗺️ Find Your Location</h2>
+        <div class="button-group">
+          <button id="findBtn" class="btn btn-primary">📍 Get My Location</button>
+        </div>
+        
+        <div id="result" style="display:none;">
+          <div id="map"></div>
+          
+          <div class="w3w" id="w3wContainer">
+            <div class="label">What3Words Location</div>
+            <div class="words" id="w3w">///loading.location.words</div>
+          </div>
+          
+          <div class="location-info">
+            <div class="info-card">
+              <div class="info-label">Latitude</div>
+              <div class="info-value" id="lat">--</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">Longitude</div>
+              <div class="info-value" id="lng">--</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Voice Recording Section -->
+      <div class="section">
+        <h2>🎙️ Voice Recording</h2>
+        <p style="color: #7f8c8d; margin-bottom: 20px; line-height: 1.5;">
+          Optionally record a voice note to accompany your location data. 
+          This can be useful for providing context or additional details.
+        </p>
+        
+        <div class="button-group">
+          <button id="startWhisper" class="btn btn-secondary">🎙️ Start Recording</button>
+          <button id="skipWhisper" class="btn btn-tertiary">⏭️ Skip Recording</button>
+        </div>
+        
+        <div id="recStatus" class="rec-status" style="display: none;"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Submit Section -->
+      <div class="section">
+        <form id="finalForm">
+          <input type="hidden" name="latitude" id="hiddenLat">
+          <input type="hidden" name="longitude" id="hiddenLng">
+          <input type="hidden" name="what3words" id="hiddenW3w">
+          <button type="submit" class="btn btn-submit">✅ Submit Data</button>
+        </form>
+      </div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // --------- WHAT3WORDS/LOCATION SECTION -------------
     let map, marker, userLat, userLng;
+    
     document.getElementById('findBtn').onclick = async () => {
+      const btn = document.getElementById('findBtn');
+      btn.innerHTML = '⏳ Getting Location...';
+      btn.disabled = true;
+
       navigator.geolocation.getCurrentPosition(async (pos) => {
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
+        
         document.getElementById('lat').textContent = userLat.toFixed(6);
         document.getElementById('lng').textContent = userLng.toFixed(6);
         document.getElementById('hiddenLat').value = userLat;
         document.getElementById('hiddenLng').value = userLng;
         document.getElementById('result').style.display = 'block';
+        
         if (!map) {
           map = L.map('map').setView([userLat, userLng], 17);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
         }
+        
         if (marker) marker.remove();
-        marker = L.marker([userLat, userLng]).addTo(map).bindPopup('You are here').openPopup();
+        marker = L.marker([userLat, userLng]).addTo(map)
+          .bindPopup('📍 You are here')
+          .openPopup();
 
-        // What3Words API call (update to your backend endpoint if needed)
-        const resp = await fetch(`/api/what3words?lat=${userLat}&lng=${userLng}`);
-        const data = await resp.json();
-        document.getElementById('w3w').textContent = data.words ? `///${data.words}` : '///error.getting.words';
-        document.getElementById('hiddenW3w').value = data.words ? data.words : '';
-      }, (err) => alert('Unable to find location!'));
+        // What3Words API call
+        try {
+          document.getElementById('w3w').textContent = 'Loading...';
+          const resp = await fetch(`/api/what3words?lat=${userLat}&lng=${userLng}`);
+          const data = await resp.json();
+          const words = data.words ? `///${data.words}` : '///error.getting.words';
+          document.getElementById('w3w').textContent = words;
+          document.getElementById('hiddenW3w').value = data.words || '';
+        } catch (error) {
+          document.getElementById('w3w').textContent = '///error.getting.words';
+          console.error('What3Words error:', error);
+        }
+
+        btn.innerHTML = '✅ Location Found';
+        btn.style.background = 'linear-gradient(135deg, #27ae60 0%, #229954 100%)';
+        
+      }, (err) => {
+        alert('Unable to find location! Please enable location access and try again.');
+        btn.innerHTML = '📍 Get My Location';
+        btn.disabled = false;
+        console.error('Geolocation error:', err);
+      }, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60000
+      });
     };
 
     // --------- WHISPER SECTION -------------
     let recorder, audioChunks = [], audioBlob = null, whisperActive = false;
+    const recStatus = document.getElementById('recStatus');
 
     document.getElementById('startWhisper').onclick = async () => {
-      if (recorder && recorder.state === 'recording') return; // Already recording
-      audioChunks = [];
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = e => audioChunks.push(e.data);
-      recorder.onstart = () => {
-        whisperActive = true;
-        document.getElementById('recStatus').textContent = '🎙️ Recording... Speak now. Recording will stop on submit.';
-      };
-      recorder.onstop = () => {
-        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        document.getElementById('recStatus').textContent = '🎙️ Recording captured! Ready to submit.';
-        whisperActive = false;
-      };
-      recorder.start();
+      if (recorder && recorder.state === 'recording') return;
+      
+      try {
+        audioChunks = [];
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recorder = new MediaRecorder(stream);
+        
+        recorder.ondataavailable = e => audioChunks.push(e.data);
+        
+        recorder.onstart = () => {
+          whisperActive = true;
+          recStatus.style.display = 'block';
+          recStatus.className = 'rec-status recording';
+          recStatus.textContent = '🎙️ Recording in progress... Speak clearly into your microphone.';
+          document.getElementById('startWhisper').innerHTML = '⏹️ Stop Recording';
+          document.getElementById('startWhisper').onclick = stopRecording;
+        };
+        
+        recorder.onstop = () => {
+          audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          recStatus.className = 'rec-status';
+          recStatus.textContent = '✅ Recording captured! Voice note is ready for submission.';
+          whisperActive = false;
+          document.getElementById('startWhisper').innerHTML = '🎙️ Start New Recording';
+          document.getElementById('startWhisper').onclick = document.getElementById('startWhisper').onclick;
+        };
+        
+        recorder.start();
+      } catch (error) {
+        alert('Unable to access microphone. Please check your permissions.');
+        console.error('Microphone access error:', error);
+      }
     };
+
+    function stopRecording() {
+      if (recorder && recorder.state === 'recording') {
+        recorder.stop();
+        recorder.stream.getTracks().forEach(track => track.stop());
+      }
+    }
 
     document.getElementById('skipWhisper').onclick = () => {
       if (recorder && recorder.state === 'recording') {
-        recorder.stop();
+        stopRecording();
       }
-      document.getElementById('recStatus').textContent = 'Voice recording skipped.';
+      recStatus.style.display = 'block';
+      recStatus.className = 'rec-status';
+      recStatus.textContent = '⏭️ Voice recording skipped. You can submit without audio.';
       whisperActive = false;
       audioBlob = null;
     };
 
     document.getElementById('finalForm').onsubmit = async (e) => {
       e.preventDefault();
+      
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.innerHTML = '⏳ Submitting...';
+      submitBtn.disabled = true;
+
       // Stop recording if still running
       if (recorder && recorder.state === 'recording') {
         await new Promise(resolve => {
           recorder.onstop = resolve;
-          recorder.stop();
+          stopRecording();
         });
       }
 
-      // Prepare form data (fields + audio)
+      // Prepare form data
       const formData = new FormData(document.getElementById('finalForm'));
       if (audioBlob) {
         formData.append('audio', audioBlob, 'recording.webm');
       }
 
-      // Submit to your backend route (update if needed)
-      const resp = await fetch('/api/whisper-transcribe', {
-        method: 'POST',
-        body: formData
-      });
-      const result = await resp.json();
-      document.getElementById('recStatus').textContent = result.transcript
-        ? 'Transcription: ' + result.transcript
-        : 'Audio submitted!';
-
-      // Redirect, close, or show success as needed
-      // window.location.href = 'index.html'; // Optionally redirect
+      try {
+        const resp = await fetch('/api/whisper-transcribe', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (resp.ok) {
+          const result = await resp.json();
+          recStatus.style.display = 'block';
+          recStatus.className = 'rec-status';
+          recStatus.textContent = result.transcript 
+            ? `✅ Success! Transcription: "${result.transcript}"` 
+            : '✅ Data submitted successfully!';
+          
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 3000);
+        } else {
+          throw new Error('Submission failed');
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        alert('Failed to submit data. Please try again.');
+        submitBtn.innerHTML = '✅ Submit Data';
+        submitBtn.disabled = false;
+      }
     };
   </script>
 </body>
 </html>
-
