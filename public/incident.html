@@ -254,7 +254,7 @@
                 return true;
             } catch (error) {
                 console.error('Microphone permission denied:', error);
-                alert('Microphone access is required for voice recording. Please allow microphone access and try again.');
+                // Don't show alert - just return false and proceed to typeform
                 return false;
             }
         }
@@ -356,37 +356,23 @@
         // Button Event Handlers
         document.getElementById('activateWhisperBtn').onclick = async function() {
             if (!isRecording) {
-                // Show user confirmation first
-                const confirmed = confirm('This will request microphone access to record your voice. Click OK to continue.');
-                if (!confirmed) {
-                    return;
-                }
-
-                // Request microphone permission first
+                // Request microphone permission
                 const hasPermission = await requestMicrophonePermission();
+                
                 if (!hasPermission) {
+                    // User declined microphone permission - go directly to typeform
+                    showTypeform();
                     return;
                 }
 
-                // Wait a moment for user to be ready
-                document.getElementById('voiceStatus').textContent = 'Preparing to record... Click OK when ready.';
-                document.getElementById('voiceStatus').style.display = 'block';
-                
-                // Add delay for user to prepare
-                setTimeout(() => {
-                    const readyConfirm = confirm('Ready to start recording? Click OK to begin voice recording.');
-                    if (readyConfirm) {
-                        if (initializeVoiceRecognition()) {
-                            startRecording();
-                            // Show typeform after recording starts
-                            setTimeout(() => {
-                                showTypeform();
-                            }, 2000);
-                        }
-                    } else {
-                        document.getElementById('voiceStatus').style.display = 'none';
-                    }
-                }, 1000);
+                // User granted permission - start recording
+                if (initializeVoiceRecognition()) {
+                    startRecording();
+                    // Show typeform after a brief delay to allow recording to start
+                    setTimeout(() => {
+                        showTypeform();
+                    }, 1500);
+                }
             } else {
                 stopRecording();
             }
