@@ -1,13 +1,13 @@
 const axios = require('axios');
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 
-// ✅ This is the final mapped incident report template with fillable fields
-// Generated via PDF.co using /pdf/edit/add with field names from your Firestore mapping
-const PDF_TEMPLATE_URL = 'https://pdf-temp-files.s3.us-west-2.amazonaws.com/UI82J546HBN0Z7YBNVR701YEOVICILDH/f1040-filled.pdf';
-const OUTPUT_PDF_NAME = 'filled_incident_report.pdf';
+// --- Config ---
 const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
+const DOCX_TEMPLATE_PATH = path.join(__dirname, 'public', 'Car Crash Lawyer AI Incident Report.docx');
+const OUTPUT_PDF_PATH = './output_incident_report.pdf';
 
-// --- Sample data to simulate Firestore document ---
+// --- Sample Data to Fill ---
 const dataToFill = {
   user_full_name: "Ian Ring",
   incident_date: "2025-07-23",
@@ -16,37 +16,37 @@ const dataToFill = {
   vehicle_make: "Tesla",
   vehicle_model: "Model Y",
   policy_number: "POL123456",
-  statement_of_events: "A vehicle collided while stationary at red light.",
-  // ✅ Add more fields here that match your template exactly
+  statement_of_events: "A vehicle collided from the rear while stationary at red light.",
+  // Add more fields matching your template
 };
 
-// Convert key-value pairs into PDF.co field structure
-const fields = Object.entries(dataToFill).map(([key, value]) => ({
-  fieldName: key,
-  pages: "1", // or "0-" if you want to fill across all pages
-  text: value
-}));
-
-// --- Call PDF.co API to fill the form ---
+// --- PDF.co API call ---
 async function fillAndDownloadPDF() {
   try {
+    const docxData = fs.readFileSync(DOCX_TEMPLATE_PATH).toString('base64');
+
     const response = await axios.post(
-      'https://api.pdf.co/v1/pdf/edit/fields',
+      'https://api.pdf.co/v1/pdf/edit/replace-text',
       {
-        url: PDF_TEMPLATE_URL,
-        name: OUTPUT_PDF_NAME,
+        name: "incident_report.pdf",
+        url: `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${docxData}`,
         async: false,
-        fields
+        replaceText: Object.entries(dataToFill).map(([key, value]) => ({
+          searchString: `{{${key}}}`,
+          replaceString: String(value)
+        }))
       },
       {
         headers: {
-          'x-api-key': PDFCO_API_KEY
+          "x-api-key": PDFCO_API_KEY
         }
       }
     );
 
     if (response.data && response.data.url) {
-      console.log('✅ Filled PDF available at:', response.data.url);
+      const pdfFile = await axios.get(response.data.url, { responseType: 'arraybuffer' });
+      fs.writeFileSync(OUTPUT_PDF_PATH, pdfFile.data);
+      console.log(`✅ PDF created at ${OUTPUT_PDF_PATH}`);
     } else {
       console.error('❌ PDF.co error:', response.data);
     }
@@ -56,11 +56,4 @@ async function fillAndDownloadPDF() {
 }
 
 fillAndDownloadPDF();
-
-
-
-
-
-
-
 

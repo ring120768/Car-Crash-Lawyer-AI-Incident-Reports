@@ -1,0 +1,556 @@
+
+Thinking
+Copy<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Accident Report PDF Template Preview</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        .form-field {
+            border: 1px solid #000;
+            padding: 4px 8px;
+            background-color: #f9f9f9;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            min-height: 20px;
+            display: inline-block;
+        }
+
+        .checkbox-field {
+            width: 15px;
+            height: 15px;
+            border: 1px solid #000;
+            display: inline-block;
+            background-color: #f0f0f0;
+            position: relative;
+            margin-right: 8px;
+        }
+
+        .checkbox-field::after {
+            content: '{{ checkbox }}';
+            font-size: 6px;
+            color: #999;
+            position: absolute;
+            top: 2px;
+            left: 1px;
+        }
+
+        .section-header {
+            font-weight: bold;
+            font-size: 14px;
+            margin: 20px 0 10px 0;
+            text-decoration: underline;
+        }
+
+        .subsection-header {
+            font-weight: bold;
+            font-size: 12px;
+            margin: 15px 0 8px 0;
+        }
+
+        .field-label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        table td {
+            padding: 5px;
+            vertical-align: middle;
+        }
+
+        .witness-table {
+            border: 1px solid #000;
+        }
+
+        .witness-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .witness-table th {
+            border: 1px solid #000;
+            padding: 8px;
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            line-height: 1.4;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .qr-placeholder {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #999;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="text-center mb-4">
+        <div class="qr-placeholder">QR CODE</div>
+        <div class="text-xs mb-2">Scan for digital access</div>
+    </div>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 120px;">Case Reference:</td>
+            <td><span class="form-field" style="width: 200px;">{{ accident_reference }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Date of Report:</td>
+            <td><span class="form-field" style="width: 200px;">{{ submit_date }}</span></td>
+        </tr>
+    </table>
+
+    <div class="title">TRAFFIC ACCIDENT LEGAL REPORT AND STATEMENT</div>
+
+    <!-- Medical and Injury Assessment -->
+    <div class="section-header">MEDICAL AND INJURY ASSESSMENT</div>
+
+    <p><strong>Are you suffering with any of the following? (Select all appropriate)</strong></p>
+
+    <table class="mb-4">
+        <tr>
+            <td style="width: 50%;">
+                <div class="mb-2"><span class="checkbox-field"></span>{{ chest_pain }} Chest Pain</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ breathlessness }} Breathlessness</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ dizziness }} Dizziness</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ severe_headache }} Severe headache</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ abdominal_pain }} Abdominal pain</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ limb_pain }} Limb Pain that's impeding mobility</div>
+            </td>
+            <td style="width: 50%;">
+                <div class="mb-2"><span class="checkbox-field"></span>{{ uncontrolled_bleeding }} Uncontrolled Bleeding</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ limb_weakness }} Limb weakness or changes in sensation</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ loss_of_consciousness }} Loss of consciousness</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ change_in_vision }} Change of vision</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ abdominal_bruising }} Abdominal Bruising</div>
+                <div class="mb-2"><span class="checkbox-field"></span>{{ other_conditions }} Any other concerns that are life or limb threatening</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="mb-2"><span class="checkbox-field"></span>{{ feel_ok }} None of these - I'm fine to continue</div>
+
+    <p class="mt-4"><strong>Medical Attention - Have you received any medical attention from emergency services?</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ medical_attention }} Yes &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ medical_attention }} No
+    </div>
+
+    <p><strong>If yes, please describe in your own words that attention:</strong></p>
+    <div class="form-field mb-4" style="width: 100%; height: 60px; display: block;">{{ medical_attention_details }}</div>
+
+    <div class="subsection-header">Safety Equipment</div>
+
+    <table class="mb-4">
+        <tr>
+            <td style="width: 250px;"><strong>Were the Airbags Deployed?</strong></td>
+            <td><span class="checkbox-field"></span>{{ airbags_deployed }} Yes</td>
+            <td><span class="checkbox-field"></span>{{ airbags_deployed }} No</td>
+        </tr>
+        <tr>
+            <td><strong>Were you and all passengers wearing seat belts?</strong></td>
+            <td><span class="checkbox-field"></span>{{ seatbelt_worn }} Yes</td>
+            <td><span class="checkbox-field"></span>{{ seatbelt_worn }} No</td>
+        </tr>
+    </table>
+
+    <p><strong>Was there any reason why seat belts were not being worn?</strong></p>
+    <div class="form-field mb-4" style="width: 100%; height: 40px; display: block;">{{ seatbelt_reason }}</div>
+
+    <p><strong>Was it recommended that you attend Hospital or seek further medical attention?</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ hospital_recommendation }} Attend Hospital &nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ hospital_recommendation }} Attend A&E &nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ hospital_recommendation }} Book GP Appointment &nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ hospital_recommendation }} No further attention required
+    </div>
+
+    <!-- Accident Time and Location -->
+    <div class="section-header">ACCIDENT TIME AND LOCATION</div>
+
+    <p><strong>When did the accident happen? (Required)</strong></p>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 120px;">Date of Accident</td>
+            <td><span class="form-field" style="width: 200px;">{{ accident_date }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Time of Accident</td>
+            <td><span class="form-field" style="width: 200px;">{{ accident_time }}</span></td>
+        </tr>
+    </table>
+
+    <p><strong>Where exactly did the accident happen? (Required)</strong></p>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 100px;">Street/Road Name:</td>
+            <td style="width: 150px;"><span class="form-field" style="width: 140px;">{{ street_name }}</span></td>
+            <td class="field-label" style="width: 80px;">Town/City:</td>
+            <td><span class="form-field" style="width: 140px;">{{ town_city }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">County:</td>
+            <td><span class="form-field" style="width: 140px;">{{ county }}</span></td>
+            <td class="field-label">Postcode:</td>
+            <td><span class="form-field" style="width: 140px;">{{ postcode }}</span></td>
+        </tr>
+    </table>
+
+    <!-- Conditions and Environment -->
+    <div class="section-header">CONDITIONS AND ENVIRONMENT</div>
+
+    <p><strong>What were the weather, light and road conditions? (Required)</strong></p>
+
+    <div class="subsection-header">Weather Conditions:</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_clear_dry }} Clear and dry</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_light_rain }} Light Rain</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_heavy_rain }} Heavy Rain</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_fog }} Fog or poor visibility</div>
+    <div class="mb-4"><span class="checkbox-field"></span>{{ weather_snow_ice }} Snow or Ice</div>
+
+    <div class="subsection-header">Road Surface:</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_wet_road }} Wet Road</div>
+    <div class="mb-4"><span class="checkbox-field"></span>{{ weather_snow_ice }} Snow/ice on the road</div>
+
+    <div class="subsection-header">Lighting Conditions:</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_bright_day }} Bright Daylight</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_dusk }} Dusk</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_dark }} Dark</div>
+    <div class="mb-2"><span class="checkbox-field"></span>{{ weather_street_lights }} Street lights</div>
+    <div class="mb-4"><span class="checkbox-field"></span>{{ weather_dull_light }} Overcast</div>
+
+    <div class="subsection-header">Road and Junction Details:</div>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 150px;">Road type</td>
+            <td><span class="form-field" style="width: 200px;">{{ road_type }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Speed limit (permanent limit for that road)</td>
+            <td><span class="form-field" style="width: 100px;">{{ speed_limit }}</span> mph</td>
+        </tr>
+        <tr>
+            <td class="field-label">Junction information (if applicable)</td>
+            <td><span class="form-field" style="width: 200px;">{{ junction_type }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Special conditions</td>
+            <td><span class="form-field" style="width: 200px;">{{ road_conditions }}</span></td>
+        </tr>
+    </table>
+
+    <p><strong>Special Road conditions and any hazards:</strong></p>
+    <div class="form-field mb-4" style="width: 100%; height: 60px; display: block;">{{ hazards_present }}</div>
+
+    <!-- Accident Description -->
+    <div class="section-header">ACCIDENT DESCRIPTION</div>
+
+    <p><strong>Describe what happened in the accident (Required)</strong></p>
+    <div class="form-field mb-4" style="width: 100%; height: 100px; display: block;">{{ accident_description }}</div>
+
+    <!-- Your Vehicle Information -->
+    <div class="section-header">YOUR VEHICLE INFORMATION</div>
+
+    <p><strong>Were you driving your usual vehicle? (Required)</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ usual_vehicle }} Yes &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ usual_vehicle }} No
+    </div>
+
+    <p><strong>Please put the vehicle details in below:</strong></p>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 120px;">Make of Car</td>
+            <td><span class="form-field" style="width: 200px;">{{ vehicle_make }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Model of Car</td>
+            <td><span class="form-field" style="width: 200px;">{{ vehicle_model }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Licence Plate Number</td>
+            <td><span class="form-field" style="width: 200px;">{{ license_plate_number }}</span></td>
+        </tr>
+    </table>
+
+    <p><strong>Explain some key points on Road Conditions (Required)</strong></p>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 150px;">Direction of travel and estimated speed</td>
+            <td colspan="3"><span class="form-field" style="width: 300px;">{{ direction_and_speed }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Point of impact and damage description</td>
+            <td colspan="3"><span class="form-field" style="width: 300px;">{{ impact_and_damage_description }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">MOT status</td>
+            <td><span class="checkbox-field"></span>{{ mot_status }} Valid</td>
+            <td><span class="checkbox-field"></span>{{ mot_status }} Expired</td>
+            <td><span class="checkbox-field"></span>{{ mot_status }} Not applicable</td>
+        </tr>
+        <tr>
+            <td class="field-label">Road tax status</td>
+            <td><span class="checkbox-field"></span>{{ road_tax_status }} Valid</td>
+            <td><span class="checkbox-field"></span>{{ road_tax_status }} Expired</td>
+            <td><span class="checkbox-field"></span>{{ road_tax_status }} SORN</td>
+        </tr>
+    </table>
+
+    <!-- Other Vehicles Involved -->
+    <div class="section-header">OTHER VEHICLES INVOLVED</div>
+
+    <p><strong>Were there other Vehicles involved? (Required)</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ other_vehicles }} Yes &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ other_vehicles }} No
+    </div>
+
+    <div class="subsection-header">Other Driver's Personal Details</div>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 100px;">Driver's Name:</td>
+            <td style="width: 150px;"><span class="form-field" style="width: 140px;">{{ driver_name }}</span></td>
+            <td class="field-label" style="width: 100px;">Driver's Number:</td>
+            <td><span class="form-field" style="width: 140px;">{{ drivers_number }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Driver's Address:</td>
+            <td colspan="3"><span class="form-field" style="width: 320px;">{{ drivers_address }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Street:</td>
+            <td colspan="3"><span class="form-field" style="width: 320px;">{{ driver_street }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Town/City:</td>
+            <td><span class="form-field" style="width: 140px;">{{ driver_town }}</span></td>
+            <td class="field-label">County:</td>
+            <td><span class="form-field" style="width: 140px;">{{ driver_county }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Postcode:</td>
+            <td><span class="form-field" style="width: 140px;">{{ driver_postcode }}</span></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+
+    <div class="subsection-header">Other Driver's Vehicle Details</div>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 150px;">Make of Vehicle</td>
+            <td><span class="form-field" style="width: 200px;">{{ other_vehicle_make }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Model of Vehicle</td>
+            <td><span class="form-field" style="width: 200px;">{{ other_vehicle_model }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Vehicle License Plate</td>
+            <td><span class="form-field" style="width: 200px;">{{ other_license_plate }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Any damage caused by the accident</td>
+            <td><span class="form-field" style="width: 200px;">{{ damage_by_accident }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Any damage caused prior to the accident</td>
+            <td><span class="form-field" style="width: 200px;">{{ pre_existing_damage }}</span></td>
+        </tr>
+    </table>
+
+    <div class="subsection-header">Other Driver's Insurance Details</div>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 120px;">Insurance Company</td>
+            <td><span class="form-field" style="width: 200px;">{{ insurance_company }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Policy Number</td>
+            <td><span class="form-field" style="width: 200px;">{{ policy_number }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Policy Holder</td>
+            <td><span class="form-field" style="width: 200px;">{{ policy_holder }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Policy Cover Type</td>
+            <td><span class="form-field" style="width: 200px;">{{ policy_cover_type }}</span></td>
+        </tr>
+    </table>
+
+    <p><strong>Record your detailed account of what happened:</strong></p>
+    <div class="form-field mb-4" style="width: 100%; height: 80px; display: block;">{{ other_vehicle_details }}</div>
+
+    <!-- Witness Information -->
+    <div class="section-header">WITNESS INFORMATION</div>
+
+    <p><strong>Were there any witnesses? (Required)</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ witnesses_present }} Yes &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ witnesses_present }} No
+    </div>
+
+    <p><strong>Witness contact information and what they saw:</strong></p>
+
+    <table class="witness-table mb-4">
+        <thead>
+            <tr>
+                <th>Witness Name</th>
+                <th>Contact Number</th>
+                <th>Address</th>
+                <th>What they observed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="form-field" style="width: 100px;">{{ witness_name_1 }}</span></td>
+                <td><span class="form-field" style="width: 100px;">{{ witness_contact_1 }}</span></td>
+                <td><span class="form-field" style="width: 100px;">{{ witness_address_1 }}</span></td>
+                <td><span class="form-field" style="width: 120px;">{{ witness_observed_1 }}</span></td>
+            </tr>
+            <tr>
+                <td><span class="form-field" style="width: 100px;">{{ witness_name_2 }}</span></td>
+                <td><span class="form-field" style="width: 100px;">{{ witness_contact_2 }}</span></td>
+                <td><span class="form-field" style="width: 100px;">{{ witness_address_2 }}</span></td>
+                <td><span class="form-field" style="width: 120px;">{{ witness_observed_2 }}</span></td>
+            </tr>
+            <tr>
+                <td><span class="form-field" style="width: 100px;">{{ witness_name_3 }}</span></td>
+                <td><span class="form-field" style="width: 100px;">{{ witness_contact_3 }}</span></td>
+                <td><span class="form-field" style="width: 100px;">{{ witness_address_3 }}</span></td>
+                <td><span class="form-field" style="width: 120px;">{{ witness_observed_3 }}</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Police Involvement -->
+    <div class="section-header">POLICE INVOLVEMENT</div>
+
+    <p><strong>Did police attend the scene? (Required)</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ police_attended }} Yes &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ police_attended }} No
+    </div>
+
+    <div class="subsection-header">Police Report Details</div>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 200px;">Accident reference number</td>
+            <td><span class="form-field" style="width: 200px;">{{ accident_reference }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Police force details and attending officer information</td>
+            <td><span class="form-field" style="width: 200px;">{{ attending_officer_info }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Police Officer's name</td>
+            <td><span class="form-field" style="width: 200px;">{{ officer_name }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Police Officer's Badge number</td>
+            <td><span class="form-field" style="width: 200px;">{{ officer_badge_number }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Breath test results (if applicable)</td>
+            <td><span class="form-field" style="width: 200px;">{{ breath_test_results }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Any other breath test results (if applicable)</td>
+            <td><span class="form-field" style="width: 200px;">{{ other_breath_test_results }}</span></td>
+        </tr>
+    </table>
+
+    <!-- Additional Information -->
+    <div class="section-header">ADDITIONAL INFORMATION</div>
+
+    <p><strong>Anything else important we should know?</strong></p>
+    <div class="form-field mb-4" style="width: 100%; height: 80px; display: block;">{{ other_notes }}</div>
+
+    <p><strong>Do you want to notify your Emergency contact?</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ notify_emergency_contact }} Yes &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ notify_emergency_contact }} No
+    </div>
+
+    <p><strong>How would you prefer updates?</strong></p>
+    <div class="mb-4">
+        <span class="checkbox-field"></span>{{ update_preference }} Email &nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ update_preference }} Text/SMS &nbsp;&nbsp;
+        <span class="checkbox-field"></span>{{ update_preference }} Email + Text
+    </div>
+
+    <!-- Legal Declaration -->
+    <div class="section-header">LEGAL DECLARATION</div>
+
+    <div class="subsection-header">DECLARATION:</div>
+
+    <p class="mb-4">I hereby declare that the information provided in this Traffic Accident Legal Report and Statement is true and accurate to the best of my knowledge and belief. I understand that this document may be used in legal proceedings and that providing false information may constitute perjury under UK law.</p>
+
+    <table class="mb-4">
+        <tr>
+            <td class="field-label" style="width: 100px;">Your Full Name</td>
+            <td><span class="form-field" style="width: 200px;">{{ user_full_name }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Signature</td>
+            <td><span class="form-field" style="width: 200px;">{{ user_signature }}</span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Date</td>
+            <td><span class="form-field" style="width: 200px;">{{ declaration_date }}</span></td>
+        </tr>
+    </table>
+
+    <div class="text-center mt-8">
+        <strong>Document Reference: ________________ Page ___ of ___</strong>
+    </div>
+</body>
+</html>
