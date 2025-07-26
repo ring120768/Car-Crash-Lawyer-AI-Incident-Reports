@@ -4,7 +4,7 @@ const path = require('path');
 
 // --- Config ---
 const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
-const DOCX_TEMPLATE_PATH = path.join(__dirname, 'public', 'Car Crash Lawyer AI Incident Report.docx');
+const DOCX_TEMPLATE_PATH = path.join(__dirname, 'public', 'public', 'Car Crash Lawyer AI Incident Report .docx');
 const OUTPUT_PDF_PATH = './output_incident_report.pdf';
 
 // --- Sample Data to Fill ---
