@@ -1,12 +1,13 @@
 const axios = require('axios');
 require('dotenv').config();
 
-// --- PDF.co Config ---
-const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
+// ✅ This is the final mapped incident report template with fillable fields
+// Generated via PDF.co using /pdf/edit/add with field names from your Firestore mapping
 const PDF_TEMPLATE_URL = 'https://pdf-temp-files.s3.us-west-2.amazonaws.com/UI82J546HBN0Z7YBNVR701YEOVICILDH/f1040-filled.pdf';
 const OUTPUT_PDF_NAME = 'filled_incident_report.pdf';
+const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
 
-// --- Sample data to simulate Firestore output ---
+// --- Sample data to simulate Firestore document ---
 const dataToFill = {
   user_full_name: "Ian Ring",
   incident_date: "2025-07-23",
@@ -15,18 +16,18 @@ const dataToFill = {
   vehicle_make: "Tesla",
   vehicle_model: "Model Y",
   policy_number: "POL123456",
-  statement_of_events: "Vehicle collided while stationary at red light."
-  // ✅ Add more fields matching your PDF field names
+  statement_of_events: "A vehicle collided while stationary at red light.",
+  // ✅ Add more fields here that match your template exactly
 };
 
-// Convert key-value pairs to PDF.co-compatible fields
+// Convert key-value pairs into PDF.co field structure
 const fields = Object.entries(dataToFill).map(([key, value]) => ({
   fieldName: key,
-  pages: "1",  // Change to "0-" if your form is multi-page
+  pages: "1", // or "0-" if you want to fill across all pages
   text: value
 }));
 
-// --- Fill the PDF via PDF.co API ---
+// --- Call PDF.co API to fill the form ---
 async function fillAndDownloadPDF() {
   try {
     const response = await axios.post(
@@ -55,6 +56,7 @@ async function fillAndDownloadPDF() {
 }
 
 fillAndDownloadPDF();
+
 
 
 
