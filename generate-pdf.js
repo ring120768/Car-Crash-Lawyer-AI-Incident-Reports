@@ -1,13 +1,12 @@
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+require('dotenv').config();
 
-// --- Config ---
+// --- PDF.co Config ---
 const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
-const DOCX_TEMPLATE_PATH = path.join(__dirname, 'public', 'Car Crash Lawyer AI Incident Report.docx');
-const OUTPUT_PDF_PATH = './output_incident_report.pdf';
+const PDF_TEMPLATE_URL = 'https://pdf-temp-files.s3.us-west-2.amazonaws.com/UI82J546HBN0Z7YBNVR701YEOVICILDH/f1040-filled.pdf';
+const OUTPUT_PDF_NAME = 'filled_incident_report.pdf';
 
-// --- Sample Data to Fill ---
+// --- Sample data to simulate Firestore output ---
 const dataToFill = {
   user_full_name: "Ian Ring",
   incident_date: "2025-07-23",
@@ -16,37 +15,37 @@ const dataToFill = {
   vehicle_make: "Tesla",
   vehicle_model: "Model Y",
   policy_number: "POL123456",
-  statement_of_events: "A vehicle collided from the rear while stationary at red light.",
-  // Add more fields matching your template
+  statement_of_events: "Vehicle collided while stationary at red light."
+  // ✅ Add more fields matching your PDF field names
 };
 
-// --- PDF.co API call ---
+// Convert key-value pairs to PDF.co-compatible fields
+const fields = Object.entries(dataToFill).map(([key, value]) => ({
+  fieldName: key,
+  pages: "1",  // Change to "0-" if your form is multi-page
+  text: value
+}));
+
+// --- Fill the PDF via PDF.co API ---
 async function fillAndDownloadPDF() {
   try {
-    const docxData = fs.readFileSync(DOCX_TEMPLATE_PATH).toString('base64');
-
     const response = await axios.post(
-      'https://api.pdf.co/v1/pdf/edit/replace-text',
+      'https://api.pdf.co/v1/pdf/edit/fields',
       {
-        name: "incident_report.pdf",
-        url: `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${docxData}`,
+        url: PDF_TEMPLATE_URL,
+        name: OUTPUT_PDF_NAME,
         async: false,
-        replaceText: Object.entries(dataToFill).map(([key, value]) => ({
-          searchString: `{{${key}}}`,
-          replaceString: String(value)
-        }))
+        fields
       },
       {
         headers: {
-          "x-api-key": PDFCO_API_KEY
+          'x-api-key': PDFCO_API_KEY
         }
       }
     );
 
     if (response.data && response.data.url) {
-      const pdfFile = await axios.get(response.data.url, { responseType: 'arraybuffer' });
-      fs.writeFileSync(OUTPUT_PDF_PATH, pdfFile.data);
-      console.log(`✅ PDF created at ${OUTPUT_PDF_PATH}`);
+      console.log('✅ Filled PDF available at:', response.data.url);
     } else {
       console.error('❌ PDF.co error:', response.data);
     }
@@ -56,6 +55,8 @@ async function fillAndDownloadPDF() {
 }
 
 fillAndDownloadPDF();
+
+
 
 
 
