@@ -23,18 +23,33 @@ const dataToFill = {
 // --- PDF.co API call ---
 async function fillAndDownloadPDF() {
   try {
-    const docxData = fs.readFileSync(DOCX_TEMPLATE_PATH).toString('base64');
+    // Check if template file exists
+    if (!fs.existsSync(DOCX_TEMPLATE_PATH)) {
+      throw new Error(`Template file not found: ${DOCX_TEMPLATE_PATH}`);
+    }
 
-    const response = await axios.post(
-      'https://api.pdf.co/v1/pdf/edit/replace-text',
+    console.log(`📄 Reading template from: ${DOCX_TEMPLATE_PATH}`);
+    const docxData = fs.readFileSync(DOCX_TEMPLATE_PATH).toString('base64');
+    
+    // Validate API key
+    if (!PDFCO_API_KEY) {
+      throw new Error('PDFCO_API_KEY environment variable is not set');
+    }
+
+    const replaceTextArray = Object.entries(dataToFill).map(([key, value]) => ({
+      searchString: `{{${key}}}`,
+      replaceString: String(value || '')
+    }));
+
+    console.log(`🔍 Search/replace pairs:`, replaceTextArray);
+
+    // First, let's try converting the DOCX to PDF without text replacement
+    const convertResponse = await axios.post(
+      'https://api.pdf.co/v1/pdf/convert/from/docx',
       {
-        name: "incident_report.pdf",
+        name: "converted_template.pdf",
         url: `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${docxData}`,
-        async: false,
-        replaceText: Object.entries(dataToFill).map(([key, value]) => ({
-          searchString: `{{${key}}}`,
-          replaceString: String(value)
-        }))
+        async: false
       },
       {
         headers: {
@@ -43,12 +58,42 @@ async function fillAndDownloadPDF() {
       }
     );
 
-    if (response.data && response.data.url) {
-      const pdfFile = await axios.get(response.data.url, { responseType: 'arraybuffer' });
-      fs.writeFileSync(OUTPUT_PDF_PATH, pdfFile.data);
-      console.log(`✅ PDF created at ${OUTPUT_PDF_PATH}`);
+    console.log('📋 Convert response:', convertResponse.data);
+
+    if (convertResponse.data && convertResponse.data.url) {
+      // Now try to replace text in the PDF
+      const pdfFile = await axios.get(convertResponse.data.url, { responseType: 'arraybuffer' });
+      const pdfBase64 = Buffer.from(pdfFile.data).toString('base64');
+
+      const replaceResponse = await axios.post(
+        'https://api.pdf.co/v1/pdf/edit/replace-text',
+        {
+          name: "incident_report.pdf",
+          url: `data:application/pdf;base64,${pdfBase64}`,
+          async: false,
+          replaceText: replaceTextArray
+        },
+        {
+          headers: {
+            "x-api-key": PDFCO_API_KEY
+          }
+        }
+      );
+
+      console.log('🔄 Replace response:', replaceResponse.data);
+
+      if (replaceResponse.data && replaceResponse.data.url) {
+        const finalPdfFile = await axios.get(replaceResponse.data.url, { responseType: 'arraybuffer' });
+        fs.writeFileSync(OUTPUT_PDF_PATH, finalPdfFile.data);
+        console.log(`✅ PDF created at ${OUTPUT_PDF_PATH}`);
+      } else {
+        // If text replacement fails, just save the converted PDF
+        fs.writeFileSync(OUTPUT_PDF_PATH, pdfFile.data);
+        console.log(`⚠️ Text replacement failed, but PDF created at ${OUTPUT_PDF_PATH}`);
+        console.log('Replace error:', replaceResponse.data);
+      }
     } else {
-      console.error('❌ PDF.co error:', response.data);
+      console.error('❌ PDF conversion failed:', convertResponse.data);
     }
   } catch (err) {
     console.error('❌ PDF generation failed:', err.response?.data || err.message);
