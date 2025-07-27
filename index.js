@@ -347,91 +347,8 @@ Thank you for joining Car Crash Lawyer AI.`
     });
   });
 
-          const dvlaData = response.data;
-          await db.collection('Car Crash Lawyer AI User Sign Up').doc(docId).update({
-            dvla_make: dvlaData.make || '',
-            dvla_model: dvlaData.model || '',
-            dvla_colour: dvlaData.colour || '',
-            dvla_engine_capacity: dvlaData.engine_capacity || '',
-            dvla_fuel_type: dvlaData.fuel_type || '',
-            dvla_registered_date: dvlaData.registered_date || '',
-            dvla_tax_status: dvlaData.tax_status || '',
-            dvla_mot_status: dvlaData.mot_status || '',
-            dvla_mileage: dvlaData.mileage || '',
-            dvla_updated: admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          const nodemailer = require('nodemailer');
-          const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: process.env.GMAIL_SENDER,
-              pass: process.env.GMAIL_APP_PASSWORD
-            }
-          });
-
-          const mailOptions = {
-            from: `"Car Crash Lawyer AI" <${process.env.GMAIL_SENDER}>`,
-            to: [email, 'accounts@carcrashlawyerai.com'],
-            subject: '✅ Signup Received & DVLA Confirmed',
-            text: `Hello,
-
-Your sign-up has been received and payment confirmed.
-DVLA vehicle details have been linked.
-
-Thank you for joining Car Crash Lawyer AI.`
-          };
-
-          await transporter.sendMail(mailOptions);
-          console.log(`📧 Confirmation email sent for ${docId}`);
-
-          await db.collection('Car Crash Lawyer AI Processing Log').add({
-            type: 'signup_confirmation',
-            doc_id: docId,
-            email_sent_to: email,
-            status: 'success',
-            processed_at: new Date()
-          });
-
-        } catch (err) {
-          console.error(`❌ Error during signup DVLA/email for ${docId}:`, err.message);
-        }
-      }
-    });
-  });
-        const plate = data.license_plate_number;
-
-        if (!plate) return;
-
-        try {
-          const response = await axios.get(`https://api.dvla.service/vehicle/${plate}`, {
-            headers: { Authorization: `Bearer ${process.env.DVLA_API_KEY}` }
-          });
-
-          const dvlaData = response.data;
-          await db.collection('Car Crash Lawyer AI User Sign Up').doc(docId).update({
-            dvla_make: dvlaData.make || '',
-            dvla_model: dvlaData.model || '',
-            dvla_colour: dvlaData.colour || '',
-            dvla_engine_capacity: dvlaData.engine_capacity || '',
-            dvla_fuel_type: dvlaData.fuel_type || '',
-            dvla_registered_date: dvlaData.registered_date || '',
-            dvla_tax_status: dvlaData.tax_status || '',
-            dvla_mot_status: dvlaData.mot_status || '',
-            dvla_mileage: dvlaData.mileage || '',
-            dvla_updated: admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          console.log(`🚘 DVLA data added to signup ${docId}`);
-        } catch (err) {
-          console.error(`❌ Failed to fetch DVLA data for ${docId}:`, err.message);
-        }
-      }
-    });
-  });
-
-// --- Firestore Listener for Incident Reports ---
-db.collection('Car Crash Lawyer AI Incident Reports')
+// --- Firestore Listener for User Data ---
+db.collection('Car Crash Lawyer AI User Data')
   .onSnapshot(snapshot => {
     snapshot.docChanges().forEach(async change => {
       if (change.type === 'added') {
@@ -451,5 +368,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
-
-
