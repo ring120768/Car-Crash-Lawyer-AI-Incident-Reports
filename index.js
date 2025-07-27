@@ -203,11 +203,20 @@ This user did not complete payment after 30 days. Consider personalised follow-u
 
         console.log(`📤 Referred to sales: ${doc.id}`);
       }
+        console.log(`🗑️ Auto-deleted pending signup: ${doc.id}`);
+
+        await db.collection('Car Crash Lawyer AI Processing Log').add({
+          type: 'auto_delete',
+          doc_id: doc.id,
+          status: 'deleted_after_30_days',
+          processed_at: now
+        });
+      }
     }
   } catch (err) {
     console.error('❌ Error handling signup cleanup:', err.message);
   }
-}, 15 * 60 * 1000); // check every 15 minutes
+}, 15 * 60 * 1000); // check every 15 minutes);
 
 app.get('/subscribe', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
