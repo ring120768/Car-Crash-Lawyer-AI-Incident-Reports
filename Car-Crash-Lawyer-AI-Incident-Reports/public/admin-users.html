@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard - Sign Ups</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Sign-Up Dashboard</h1>
+  <table id="signup-table">
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>Email</th>
+        <th>License</th>
+        <th>Drive Link</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    fetch('/api/admin/signups')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#signup-table tbody');
+        data.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${user.full_name || ''}</td>
+            <td>${user.email || ''}</td>
+            <td>${user.license_number || ''}</td>
+            <td>${user.signup_pdf_drive_link ? `<a href='${user.signup_pdf_drive_link}' target='_blank'>PDF</a>` : '—'}</td>
+            <td>${user.created_at || '—'}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+  </script>
+</body>
+</html>
