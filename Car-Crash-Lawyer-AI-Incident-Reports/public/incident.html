@@ -30,6 +30,7 @@
     }
     .hide { display: none; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="container" id="main-container">
@@ -44,6 +45,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-storage-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -59,15 +61,50 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     const statusText = document.getElementById('status-text');
     const typeformDiv = document.getElementById('typeform-embed');
     const debugDiv = document.getElementById('debug');
 
-    // Show debug info
     function showDebug(msg) {
       debugDiv.textContent = msg;
       debugDiv.style.display = 'block';
+    }
+
+    function waitForMapLoadAndScreenshot(user) {
+      const target = document.getElementById('main-container');
+      if (!target) return;
+
+      const maxWait = 10000;
+      const interval = 300;
+      let waited = 0;
+
+      const checkTiles = () => {
+        const tiles = document.querySelectorAll('img.leaflet-tile');
+        const allLoaded = [...tiles].every(img => img.complete);
+        if (allLoaded || waited >= maxWait) {
+          html2canvas(target).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const fileRef = storage.ref(`screenshots/${user.uid}/incident-${Date.now()}.png`);
+            fileRef.putString(imgData, 'data_url')
+              .then(() => fileRef.getDownloadURL())
+              .then(url => {
+                return db.collection('Car Crash Lawyer AI User Sign Up').doc(user.uid).set({
+                  w3w_screenshot_url: url,
+                  w3w_screenshot_uploaded_at: new Date()
+                }, { merge: true });
+              })
+              .then(() => console.log('✅ Screenshot saved'))
+              .catch(err => console.error('❌ Screenshot error:', err));
+          });
+        } else {
+          waited += interval;
+          setTimeout(checkTiles, interval);
+        }
+      };
+
+      checkTiles();
     }
 
     auth.onAuthStateChanged(async (user) => {
@@ -100,11 +137,9 @@
           return;
         }
 
-        // ACCESS GRANTED – SHOW TYPEFORM
         statusText.textContent = "Access granted! Please complete your incident report below:";
         showDebug("Access granted for: " + user.email);
 
-        // --- Embed your Typeform here ---
         typeformDiv.classList.remove('hide');
         typeformDiv.innerHTML = `
           <iframe src="https://form.typeform.com/to/WvM2ejru?user_id=${user.uid}"
@@ -112,6 +147,8 @@
             style="border:1px solid #ccc; border-radius:10px; margin-top:15px;">
           </iframe>
         `;
+
+        waitForMapLoadAndScreenshot(user);
 
       } catch (err) {
         statusText.textContent = "Error loading your access. Try again.";
@@ -121,6 +158,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
