@@ -1,73 +1,62 @@
-// Wait for map tile load, then trigger screenshot upload
-import html2canvas from "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
-import {
-  getStorage,
-  ref,
-  uploadString,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/9.6.11/firebase-storage.js";
+const { db } = require('./firebase');
 
-const auth = getAuth();
-const db = getFirestore();
-const storage = getStorage();
-
-function waitForMapToLoad(callback) {
-  const maxWait = 10000;
-  const checkInterval = 250;
-  let waited = 0;
-
-  const check = () => {
-    const tiles = document.querySelectorAll('img.leaflet-tile');
-    const loaded = [...tiles].every(img => img.complete);
-
-    if (loaded || waited >= maxWait) {
-      callback();
-    } else {
-      waited += checkInterval;
-      setTimeout(check, checkInterval);
+async function submitIncidentReport(userId, vehicleMake, vehicleModel, voiceTranscriptionUrl, imagesUrl) {
+  try {
+    // Validate that user exists first
+    const userDoc = await db.collection('Car Crash Lawyer AI User Sign Up').doc(userId).get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
     }
-  };
 
-  check();
+    const incidentReportData = {
+      user_id: userId,  // Link the report to the logged-in USER_ID
+      vehicle_make: vehicleMake,
+      vehicle_model: vehicleModel,
+      voice_transcription_url: voiceTranscriptionUrl,
+      images_url: imagesUrl,
+      created_at: new Date(),
+    };
+
+    // Add the incident report to Firestore (using correct collection name)
+    const docRef = await db.collection('Car Crash Lawyer AI Incident Reports').add(incidentReportData);
+    console.log('✅ Incident Report submitted and linked to USER_ID:', docRef.id);
+
+    return { success: true, reportId: docRef.id };
+
+  } catch (error) {
+    console.error('❌ Error submitting incident report:', error);
+    throw error;
+  }
 }
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+module.exports = {
+  submitIncidentReport,
+  getIncidentReportsByUser
+};
+// Get all incident reports for a specific user
+async function getIncidentReportsByUser(userId) {
+  try {
+    // Query the flat collection filtering by user_id
+    const snapshot = await db.collection('Car Crash Lawyer AI Incident Reports')
+      .where('user_id', '==', userId)
+      .get();
 
-  waitForMapToLoad(async () => {
-    try {
-      const target = document.getElementById('screenshotTarget');
-      if (!target) return;
-
-      const canvas = await html2canvas(target);
-      const imgData = canvas.toDataURL('image/png');
-
-      const screenshotRef = ref(storage, `screenshots/${user.uid}/map-screenshot-${Date.now()}.png`);
-      await uploadString(screenshotRef, imgData, 'data_url');
-      const downloadUrl = await getDownloadURL(screenshotRef);
-
-      const userDoc = doc(db, "Car Crash Lawyer AI User Sign Up", user.uid);
-      await updateDoc(userDoc, {
-        map_screenshot_url: downloadUrl,
-        map_screenshot_uploaded_at: new Date()
-      });
-
-      console.log("✅ Map screenshot captured and uploaded");
-    } catch (err) {
-      console.error("❌ Screenshot after map load failed:", err);
+    if (snapshot.empty) {
+      console.log('📭 No incident reports found for user:', userId);
+      return [];
     }
-  });
-});
 
+    const reports = [];
+    snapshot.forEach(doc => {
+      reports.push({ id: doc.id, ...doc.data() });
+    });
 
+    console.log(`📊 Found ${reports.length} incident reports for user:`, userId);
+    return reports;
 
+  } catch (error) {
+    console.error('❌ Error fetching incident reports for user:', error.message);
+    throw error;
+  }
+}
 
