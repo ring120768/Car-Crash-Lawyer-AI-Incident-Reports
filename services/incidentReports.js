@@ -1,15 +1,16 @@
 const { db } = require('./firebase');
 
-async function submitIncidentReport(userId, vehicleMake, vehicleModel, voiceTranscriptionUrl, imagesUrl) {
+async function submitIncidentReport(formData, vehicleMake, vehicleModel, voiceTranscriptionUrl, imagesUrl) {
   try {
-    // Validate that user exists first
-    const userDoc = await db.collection('Car Crash Lawyer AI User Sign Up').doc(userId).get();
+    const user_id = formData.hidden.User_id_hidden_field; // New field extraction
+    const product_id = formData.hidden.Product_id_hidden_field; // New field extraction
+    const userDoc = await db.collection('Car Crash Lawyer AI User Sign Up').doc(user_id).get();
     if (!userDoc.exists) {
       throw new Error('User not found');
     }
 
     const incidentReportData = {
-      user_id: userId,  // Link the report to the logged-in USER_ID
+      user_id: user_id,  // Link the report to the logged-in USER_ID
       vehicle_make: vehicleMake,
       vehicle_model: vehicleModel,
       voice_transcription_url: voiceTranscriptionUrl,
@@ -59,4 +60,3 @@ async function getIncidentReportsByUser(userId) {
     throw error;
   }
 }
-

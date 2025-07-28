@@ -3,7 +3,7 @@ const { db } = require("./firebase");
 async function checkPermissions(user_id) {
   try {
     const snapshot = await db
-      .collection("Car Crash Lawyer AI User Data")
+      .collection("Car Crash Lawyer AI User Sign Up")
       .where("user_id", "==", user_id)
       .limit(1)
       .get();
