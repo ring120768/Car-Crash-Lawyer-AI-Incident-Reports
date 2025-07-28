@@ -103,7 +103,7 @@ app.get('/incident-report/:docId', async (req, res) => {
   const { docId } = req.params;
   if (!db) return res.status(500).send('Firestore not initialized');
 
-  const ref = db.collection('Car Crash Lawyer AI User Data').doc(docId);
+  const ref = db.collection('Car Crash Lawyer AI Incident Reports').doc(docId);
   try {
     const doc = await ref.get();
     if (!doc.exists) return res.status(404).send('Incident not found');
