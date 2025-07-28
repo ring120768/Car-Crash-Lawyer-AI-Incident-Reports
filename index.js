@@ -70,4 +70,4 @@ async function generatePDF(data) {
 
   const pdfRes = await axios.get(response.data.url, { responseType: 'arraybuffer' });
   return Buffer.from(pdfRes.data);
-});
+}
