@@ -154,15 +154,14 @@ setInterval(async () => {
       if (!email || !createdAt) continue;
 
       // Escalation: Retry reminder after 24h
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       if (createdAt <= twoHoursAgo && !data.reminder_sent_at) {
         await transporter.sendMail({
           from: `"Car Crash Lawyer AI" <${process.env.GMAIL_SENDER}>`,
           to: email,
-          subject: '⏳ Your Sign-Up is Incomplete – Payment Not Received',
+          subject: '⏳ Your Sign‑Up is Incomplete – Payment Not Received',
           text: `Hello,
 
-It looks like your sign-up is missing a confirmed payment.
+It looks like your sign‑up is missing a confirmed payment.
 Please return to complete payment and unlock full access to Car Crash Lawyer AI.`
         });
 
@@ -203,20 +202,11 @@ This user did not complete payment after 30 days. Consider personalised follow-u
 
         console.log(`📤 Referred to sales: ${doc.id}`);
       }
-        console.log(`🗑️ Auto-deleted pending signup: ${doc.id}`);
-
-        await db.collection('Car Crash Lawyer AI Processing Log').add({
-          type: 'auto_delete',
-          doc_id: doc.id,
-          status: 'deleted_after_30_days',
-          processed_at: now
-        });
-      }
     }
   } catch (err) {
     console.error('❌ Error handling signup cleanup:', err.message);
   }
-}, 15 * 60 * 1000); // check every 15 minutes);
+}, 15 * 60 * 1000); // check every 15 minutes
 
 app.get('/subscribe', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
@@ -273,7 +263,7 @@ app.get('/api/admin/signups', async (req, res) => {
   }
 });
 
-// --- Firestore Listener for Sign Up + DVLA Enrichment ---
+// --- Firestore Listener for Sign‑Up + DVLA Enrichment ---
 db.collection('Car Crash Lawyer AI User Sign Up')
   .onSnapshot(snapshot => {
     snapshot.docChanges().forEach(async change => {
@@ -290,11 +280,13 @@ db.collection('Car Crash Lawyer AI User Sign Up')
         }
 
         try {
+          // Look up DVLA vehicle info
           const response = await axios.get(`https://api.dvla.service/vehicle/${plate}`, {
             headers: { Authorization: `Bearer ${process.env.DVLA_API_KEY}` }
           });
-
           const dvlaData = response.data;
+
+          // Update the sign‑up record
           await db.collection('Car Crash Lawyer AI User Sign Up').doc(docId).update({
             dvla_make: dvlaData.make || '',
             dvla_model: dvlaData.model || '',
@@ -308,6 +300,7 @@ db.collection('Car Crash Lawyer AI User Sign Up')
             dvla_updated: admin.firestore.FieldValue.serverTimestamp(),
           });
 
+          // Send confirmation e‑mail
           const nodemailer = require('nodemailer');
           const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -323,7 +316,7 @@ db.collection('Car Crash Lawyer AI User Sign Up')
             subject: '✅ Signup Received & DVLA Confirmed',
             text: `Hello,
 
-Your sign-up has been received and payment confirmed.
+Your sign‑up has been received and payment confirmed.
 DVLA vehicle details have been linked.
 
 Thank you for joining Car Crash Lawyer AI.`
@@ -339,39 +332,8 @@ Thank you for joining Car Crash Lawyer AI.`
             status: 'success',
             processed_at: new Date()
           });
-
         } catch (err) {
           console.error(`❌ Error during signup DVLA/email for ${docId}:`, err.message);
-        }
-      }
-    });
-  });
-        const plate = data.license_plate_number;
-
-        if (!plate) return;
-
-        try {
-          const response = await axios.get(`https://api.dvla.service/vehicle/${plate}`, {
-            headers: { Authorization: `Bearer ${process.env.DVLA_API_KEY}` }
-          });
-
-          const dvlaData = response.data;
-          await db.collection('Car Crash Lawyer AI User Sign Up').doc(docId).update({
-            dvla_make: dvlaData.make || '',
-            dvla_model: dvlaData.model || '',
-            dvla_colour: dvlaData.colour || '',
-            dvla_engine_capacity: dvlaData.engine_capacity || '',
-            dvla_fuel_type: dvlaData.fuel_type || '',
-            dvla_registered_date: dvlaData.registered_date || '',
-            dvla_tax_status: dvlaData.tax_status || '',
-            dvla_mot_status: dvlaData.mot_status || '',
-            dvla_mileage: dvlaData.mileage || '',
-            dvla_updated: admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          console.log(`🚘 DVLA data added to signup ${docId}`);
-        } catch (err) {
-          console.error(`❌ Failed to fetch DVLA data for ${docId}:`, err.message);
         }
       }
     });
@@ -398,23 +360,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
