@@ -116,7 +116,7 @@
       }
 
       try {
-        const userRef = db.collection('Car Crash Lawyer AI User Data').doc(user.uid);
+        const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(user.uid);
         const userSnap = await userRef.get();
 
         if (!userSnap.exists) {
