@@ -182,5 +182,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚗 Car Crash Lawyer AI running on http://localhost:${PORT}`);
 });
-const { app: pdfApp } = require('./services/pdfGenerator');
+const { app: pdfApp } = require('./Car-Crash-Lawyer-AI-Incident-Reports/services/testPDF');
 app.use('/', pdfApp);
