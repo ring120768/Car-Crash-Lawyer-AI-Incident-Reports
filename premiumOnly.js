@@ -5,7 +5,7 @@ const ENFORCE_ACCESS = process.env.ENFORCE_PRODUCT_ACCESS === "true";
 
 async function getUserAccess(userId) {
   const snapshot = await db
-    .collection("Car Crash Lawyer AI User Data")
+    .collection("Car Crash Lawyer AI User Sign Up")
     .where("user_id", "==", userId)
     .orderBy("created", "desc")
     .limit(1)
@@ -56,7 +56,7 @@ async function checkUserProductId(userId) {
 async function upgradeUserToProduct(userId, productId = "premium") {
   try {
     const snapshot = await db
-      .collection("Car Crash Lawyer AI User Data")
+      .collection("Car Crash Lawyer AI User Sign Up")
       .where("user_id", "==", userId)
       .limit(1)
       .get();
