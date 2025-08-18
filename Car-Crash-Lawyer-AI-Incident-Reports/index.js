@@ -1,127 +1,142 @@
-// pdfGenerator.js (Final Version)
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
+const admin = require('firebase-admin');
+const { google } = require('googleapis');
 const axios = require('axios');
 const fs = require('fs');
-const path = require('path');
-const nodemailer = require('nodemailer');
-const admin = require('firebase-admin');
+require('dotenv').config();
 
-// --- Config ---
-const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+// NEW: import the Firestore listener
+const { subscribeToIncidentReports } = require('./services/incidentReports');
 
-if (!admin.apps.length) {
-  const base64 = process.env.FIREBASE_CREDENTIALS_BASE64;
-  if (!base64) throw new Error('Missing FIREBASE_CREDENTIALS_BASE64!');
-  const decoded = Buffer.from(base64, 'base64').toString('utf8');
-  const serviceAccount = JSON.parse(decoded);
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-}
-const db = admin.firestore();
+const app = express();
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Utility: Email PDF to user + accounts ---
-async function sendEmailWithPDF(recipient, pdfUrl, subjectLine) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    from: EMAIL_USER,
-    to: [recipient, 'accounts@carcrashlawyerai.com'],
-    subject: subjectLine,
-    html: `<p>Your legal report is ready. You can download it here:</p><a href="${pdfUrl}">${pdfUrl}</a>`
-  });
-
-  console.log(`📤 Email sent to ${recipient} and accounts@carcrashlawyerai.com`);
-}
-
-// --- Generate PDF from Sign-Up ---
-async function generateUserPDF(signUpData) {
-  const docxPath = path.join(__dirname, 'public', 'Car Crash Lawyer AI User Information.docx');
-  const docxData = fs.readFileSync(docxPath).toString('base64');
-
-  const replaceText = Object.entries(signUpData).map(([key, value]) => ({
-    searchString: `{{${key}}}`,
-    replaceString: String(value ?? '')
-  }));
-
-  const response = await axios.post(
-    'https://api.pdf.co/v1/pdf/edit/replace-text',
-    {
-      name: `user_information_${signUpData.user_full_name || 'client'}.pdf`,
-      url: `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${docxData}`,
-      async: false,
-      replaceText
-    },
-    {
-      headers: { 'x-api-key': PDFCO_API_KEY }
-    }
-  );
-
-  if (!response.data?.url) throw new Error('❌ PDF.co failed to return a PDF URL');
-  await sendEmailWithPDF(signUpData.email_text, response.data.url, 'Your Sign-Up Summary – Car Crash Lawyer AI');
-}
-
-// --- Generate PDF from Incident Report ---
-async function generateIncidentPDF(signUpData, incidentData) {
-  const docxPath = path.join(__dirname, 'public', 'Car Crash Lawyer AI Incident Report.docx');
-  const docxData = fs.readFileSync(docxPath).toString('base64');
-
-  const mergedData = { ...signUpData, ...incidentData };
-  const replaceText = Object.entries(mergedData).map(([key, value]) => ({
-    searchString: `{{${key}}}`,
-    replaceString: String(value ?? '')
-  }));
-
-  const response = await axios.post(
-    'https://api.pdf.co/v1/pdf/edit/replace-text',
-    {
-      name: `incident_report_${mergedData.user_full_name || 'client'}.pdf`,
-      url: `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${docxData}`,
-      async: false,
-      replaceText
-    },
-    {
-      headers: { 'x-api-key': PDFCO_API_KEY }
-    }
-  );
-
-  if (!response.data?.url) throw new Error('❌ PDF.co failed to return a PDF URL');
-  await sendEmailWithPDF(signUpData.email_text, response.data.url, 'Your Incident Report – Car Crash Lawyer AI');
-}
-
-// --- Firestore listener for new incident reports ---
-db.collection('Car Crash Lawyer AI Incident Reports').onSnapshot(snapshot => {
-  snapshot.docChanges().forEach(async change => {
-    if (change.type === 'added') {
-      const incidentData = change.doc.data();
-      const userId = incidentData.user_id_hidden_field;
-      console.log('🔥 New incident report detected for user:', userId);
-
-      if (!userId) return;
-
-      const userDoc = await db.collection('Car Crash Lawyer AI User Sign Up').doc(userId).get();
-      if (!userDoc.exists) {
-        console.warn(`⚠️ No matching user found for ID: ${userId}`);
-        return;
-      }
-
-      const signUpData = userDoc.data();
-      await generateIncidentPDF(signUpData, incidentData);
-    }
-  });
+// Serve main page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-module.exports = {
-  generateUserPDF,
-  generateIncidentPDF
-};
-const { app: pdfApp } = require('./services/pdfGenerator');
-app.use('/', pdfApp);
+// --- FIREBASE SETUP ---
+if (!admin.apps.length) {
+  const base64 = process.env.FIREBASE_CREDENTIALS_BASE64;
+  if (!base64) {
+    console.warn(
+      'FIREBASE_CREDENTIALS_BASE64 not found - Firebase features disabled'
+    );
+  } else {
+    try {
+      const decoded = Buffer.from(base64, 'base64').toString('utf8');
+      const serviceAccount = JSON.parse(decoded);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      console.log('✅ Firebase initialized');
+      // After Firebase has been initialised, start listening for incident reports
+      subscribeToIncidentReports();
+    } catch (error) {
+      console.error('Error initializing Firebase:', error.message);
+    }
+  }
+}
+
+// --- GOOGLE DRIVE SETUP ---
+const driveBase64 = process.env.GOOGLE_DRIVE_CREDENTIALS_BASE64;
+if (!driveBase64) {
+  console.warn(
+    'GOOGLE_DRIVE_CREDENTIALS_BASE64 not found - Drive features disabled'
+  );
+} else {
+  try {
+    const decoded = Buffer.from(driveBase64, 'base64').toString('utf8');
+    const driveCredentials = JSON.parse(decoded);
+    const auth = new google.auth.GoogleAuth({
+      credentials: driveCredentials,
+      scopes: ['https://www.googleapis.com/auth/drive'],
+    });
+    const drive = google.drive({ version: 'v3', auth });
+    console.log('✅ Google Drive initialized');
+  } catch (error) {
+    console.error('Error initializing Google Drive:', error.message);
+  }
+}
+
+// --- WHAT3WORDS API ENDPOINT ---
+app.get('/api/what3words', async (req, res) => {
+  const { lat, lng } = req.query;
+  const apiKey = process.env.WHAT3WORDS_API_KEY;
+
+  console.log('What3Words API request:', { lat, lng, hasApiKey: !!apiKey });
+
+  if (!lat || !lng) {
+    return res.status(400).json({ error: 'Missing lat or lng parameters' });
+  }
+
+  if (!apiKey) {
+    console.error('WHAT3WORDS_API_KEY environment variable not set');
+    return res
+      .status(500)
+      .json({ error: 'What3Words API key not configured' });
+  }
+
+  try {
+    const url = `https://api.what3words.com/v3/convert-to-3wa?coordinates=${lat},${lng}&key=${apiKey}`;
+    console.log('Making request to What3Words:', url.replace(apiKey, '[HIDDEN]'));
+
+    const response = await axios.get(url);
+    console.log('What3Words response:', response.data);
+
+    if (response.data && response.data.words) {
+      res.json({ words: response.data.words });
+    } else {
+      console.error(
+        'What3Words response missing words field:',
+        response.data
+      );
+      res
+        .status(500)
+        .json({ error: 'No what3words found in response' });
+    }
+  } catch (err) {
+    console.error('what3words API error:', err.message);
+    if (err.response) {
+      console.error(
+        'What3Words error response:',
+        err.response.status,
+        err.response.data
+      );
+    }
+    res.status(500).json({
+      error: 'Failed to fetch what3words',
+      details: err.response?.data || err.message,
+    });
+  }
+});
+
+// --- Additional routes ---
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+
+app.get('/report', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'report.html'));
+});
+
+app.get('/subscribe', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
+});
+
+// --- Start the server ---
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(
+    `🚗 Car Crash Lawyer AI server running on http://localhost:${PORT}`
+  );
+  console.log(`📍 Visit /findme.html to test What3Words functionality`);
+});
+
 
 
 

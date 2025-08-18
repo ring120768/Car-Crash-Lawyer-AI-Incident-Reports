@@ -1,4 +1,3 @@
-
 const admin = require('firebase-admin');
 
 // Use local Firebase service account file

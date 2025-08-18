@@ -1,164 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Incident Report - Car Crash Lawyer AI</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f4f4;
-    }
-    .container {
-      max-width: 600px;
-      margin: 80px auto;
-      padding: 30px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #179f9a;
-    }
-    #debug {
-      color: #d32f2f;
-      font-size: 14px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .hide { display: none; }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-</head>
-<body>
-  <div class="container" id="main-container">
-    <h1>Incident Reporting</h1>
-    <p id="status-text">Checking your access...</p>
-    <!-- Typeform embed goes here when access granted -->
-    <div id="typeform-embed" class="hide"></div>
-    <div id="debug"></div>
-  </div>
+<!-- Add this in incident.html -->
+<!-- Include html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-storage-compat.js"></script>
+<script>
+  window.addEventListener('load', async () => {
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    await delay(2000); // wait for W3W map section to load
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDTBqre2ZxxG8swTvsSGuC28ytuQYp-qKs",
-      authDomain: "car-crash-lawyer-ai.firebaseapp.com",
-      projectId: "car-crash-lawyer-ai",
-      storageBucket: "car-crash-lawyer-ai.appspot.com",
-      messagingSenderId: "473755120948",
-      appId: "1:473755120948:web:fdea5724f722577befa161",
-      measurementId: "G-Z4566CNYET"
-    };
+    const target = document.querySelector('#w3w-section');
+    if (!target) return;
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
+    html2canvas(target).then(async canvas => {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const filename = `w3w_map_${Date.now()}.png`;
+      const storage = firebase.storage();
+      const db = firebase.firestore();
 
-    const statusText = document.getElementById('status-text');
-    const typeformDiv = document.getElementById('typeform-embed');
-    const debugDiv = document.getElementById('debug');
+      const imgRef = storage.ref().child(`w3w_maps/${filename}`);
+      await imgRef.put(blob);
+      const downloadURL = await imgRef.getDownloadURL();
 
-    function showDebug(msg) {
-      debugDiv.textContent = msg;
-      debugDiv.style.display = 'block';
-    }
+      const userId = new URLSearchParams(window.location.search).get('user_id');
+      if (!userId) return;
 
-    function waitForMapLoadAndScreenshot(user) {
-      const target = document.getElementById('main-container');
-      if (!target) return;
+      const incidentDocRef = db.collection('Car Crash Lawyer AI Incident Reports').doc(userId);
+      await incidentDocRef.update({
+        user_id_hidden_field: userId,
+        what3words_location: document.querySelector('#w3w-text')?.innerText || '',
+        what3words_map_image: downloadURL,
+        updated: new Date()
+      });
 
-      const maxWait = 10000;
-      const interval = 300;
-      let waited = 0;
-
-      const checkTiles = () => {
-        const tiles = document.querySelectorAll('img.leaflet-tile');
-        const allLoaded = [...tiles].every(img => img.complete);
-        if (allLoaded || waited >= maxWait) {
-          html2canvas(target).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            const fileRef = storage.ref(`screenshots/${user.uid}/incident-${Date.now()}.png`);
-            fileRef.putString(imgData, 'data_url')
-              .then(() => fileRef.getDownloadURL())
-              .then(url => {
-                return db.collection('Car Crash Lawyer AI User Sign Up').doc(user.uid).set({
-                  w3w_screenshot_url: url,
-                  w3w_screenshot_uploaded_at: new Date()
-                }, { merge: true });
-              })
-              .then(() => console.log('✅ Screenshot saved'))
-              .catch(err => console.error('❌ Screenshot error:', err));
-          });
-        } else {
-          waited += interval;
-          setTimeout(checkTiles, interval);
-        }
-      };
-
-      checkTiles();
-    }
-
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        statusText.textContent = "You need to sign in first.";
-        showDebug("Not signed in – redirecting...");
-        setTimeout(() => window.location.href = "signup.html", 1000);
-        return;
-      }
-
-      try {
-        const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(user.uid);
-        const userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-          statusText.textContent = "User record not found. Please subscribe first.";
-          showDebug("Firestore doc missing for UID: " + user.uid);
-          setTimeout(() => window.location.href = "subscribe.html", 1000);
-          return;
-        }
-
-        const data = userSnap.data();
-        const subscription = data.product_id || "standard";
-        const allowed = ["standard", "premium", "family", "business"];
-
-        if (!allowed.includes(subscription)) {
-          statusText.textContent = "Subscription required to access this feature.";
-          showDebug("Subscription not allowed: " + subscription);
-          setTimeout(() => window.location.href = "subscribe.html", 1200);
-          return;
-        }
-
-        statusText.textContent = "Access granted! Please complete your incident report below:";
-        showDebug("Access granted for: " + user.email);
-
-        typeformDiv.classList.remove('hide');
-        typeformDiv.innerHTML = `
-          <iframe src="https://form.typeform.com/to/WvM2ejru?user_id=${user.uid}"
-            width="100%" height="600" frameborder="0"
-            style="border:1px solid #ccc; border-radius:10px; margin-top:15px;">
-          </iframe>
-        `;
-
-        waitForMapLoadAndScreenshot(user);
-
-      } catch (err) {
-        statusText.textContent = "Error loading your access. Try again.";
-        showDebug("Error: " + err.message);
-      }
+      console.log('✅ What3Words image and location saved to main incident report');
     });
-  </script>
-</body>
-</html>
+  });
+</script>
 
+<!-- HTML Structure -->
+<div id="w3w-section">
+  <div><strong>📍 Full Address:</strong><br>Priory Drive, Forest Hall Park, Stansted Mountfitchet, Essex, England, CM2</div>
+  <div id="w3w-text" style="background:#e53935;color:white;padding:10px;margin:10px 0;">
+    ///swims.bumpy.blazed
+  </div>
+  <div id="map" style="height:200px;width:100%;background:#ccc;"></div>
+</div>
 
 
 
