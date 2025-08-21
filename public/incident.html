@@ -481,3 +481,36 @@
     </script>
 </body>
 </html>
+// ===== ADD THIS SCRIPT TO YOUR INCIDENT REPORT PAGE =====
+
+// This script checks if the user is authenticated and adds their user ID to the Typeform URL
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Check if user is authenticated
+    const response = await fetch('/api/auth/status');
+    const data = await response.json();
+
+    if (data.authenticated) {
+      // User is authenticated, get the Typeform URL
+      const typeformIframe = document.querySelector('iframe');
+      if (typeformIframe) {
+        const typeformUrl = typeformIframe.src;
+
+        // Add user ID as hidden field
+        const updatedUrl = typeformUrl.includes('?') 
+          ? `${typeformUrl}&hidden_user_id=${data.user.uid}`
+          : `${typeformUrl}?hidden_user_id=${data.user.uid}`;
+
+        // Update iframe src
+        typeformIframe.src = updatedUrl;
+        console.log('Added user ID to Typeform URL:', data.user.uid);
+      }
+    } else {
+      console.log('User not authenticated, using Typeform without user ID');
+    }
+  } catch (error) {
+    console.error('Error checking authentication status:', error);
+  }
+});
+
+// ===== END OF SCRIPT =====

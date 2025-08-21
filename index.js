@@ -6,6 +6,8 @@ const { google } = require('googleapis');
 const axios = require('axios');
 const fs = require('fs');
 const cors = require('cors');
+const cookieParser = require('cookie-parser'); // Added for authentication
+const authRoutes = require('./routes/auth'); // Added for authentication
 require('dotenv').config();
 
 // Import services
@@ -18,6 +20,7 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(bodyParser.json({ limit: '10mb' })); // Increased limit for larger payloads
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser()); // Added for authentication
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Request logging middleware
@@ -124,6 +127,9 @@ app.get('/health', (req, res) => {
   };
   res.json(status);
 });
+
+// --- AUTHENTICATION ROUTES ---
+app.use('/api/auth', authRoutes); // Added for authentication
 
 // --- MAIN ROUTES ---
 app.get('/', (req, res) => {
@@ -348,6 +354,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚨 Incident webhook: http://localhost:${PORT}/webhook/incident`);
   console.log(`👤 User API: http://localhost:${PORT}/api/user-details/{userId}`);
   console.log(`📋 Users list: http://localhost:${PORT}/api/users`);
+  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
 });
 
 

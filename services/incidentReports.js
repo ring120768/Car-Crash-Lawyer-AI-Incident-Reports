@@ -150,6 +150,3 @@ module.exports = {
   subscribeToIncidentReports,
   subscribeToUserSignUps,
 };
-
-
-
