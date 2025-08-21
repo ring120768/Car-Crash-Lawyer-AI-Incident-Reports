@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,13 +144,13 @@
                         📍 Find Me!
                     </button>
                 </div>
-                
+
                 <!-- Whisper Voice Buttons -->
                 <div class="flex justify-center space-x-4">
                     <button id="activateWhisperBtn" class="btn-whisper">🎤 Activate Whisper Voice</button>
                     <button id="dontRecordBtn" class="btn-whisper">🚫 Don't Record</button>
                 </div>
-                
+
                 <div id="voiceStatus" class="text-white font-semibold">Recording...</div>
             </div>
         </div>
@@ -166,12 +165,12 @@
                     <label class="block text-lg font-bold text-gray-800 mb-2">📍 Full Address:</label>
                     <input type="text" id="fullAddress" class="w-full px-3 py-3 border border-gray-300 rounded-md text-lg font-medium" readonly>
                 </div>
-                
+
                 <div id="what3wordsDisplay" class="what3words-display">
                     <div class="text-sm opacity-75 mb-2">what3words location:</div>
                     <div id="what3wordsText">///loading.location.words</div>
                 </div>
-                
+
                 <div id="map"></div>
                 <div class="location-accuracy" id="accuracyInfo">
                     <strong>Location Accuracy:</strong> <span id="accuracyValue">Unknown</span>
@@ -220,7 +219,7 @@
                 let accColor = '#27ae60';
                 if (accuracy > 50) accColor = '#e67e22';
                 if (accuracy > 100) accColor = '#e74c3c';
-                
+
                 const accuracyValue = document.getElementById('accuracyValue');
                 const accuracyInfo = document.getElementById('accuracyInfo');
                 if (accuracyValue) accuracyValue.textContent = accText;
@@ -289,16 +288,16 @@
                     console.error('getUserMedia not supported');
                     return false;
                 }
-                
+
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: true,
                     video: false 
                 });
-                
+
                 stream.getTracks().forEach(track => track.stop());
                 console.log('Microphone permission granted');
                 return true;
-                
+
             } catch (error) {
                 console.error('Microphone permission denied or error:', error.name, error.message);
                 return false;
@@ -378,32 +377,23 @@
         }
 
         function showTypeform() {
-            const lat = document.getElementById('latitude')?.value || '';
-            const lng = document.getElementById('longitude')?.value || '';
-            const address = document.getElementById('fullAddress')?.value || '';
-            const what3words = document.getElementById('what3wordsText')?.textContent || '';
-            
-            let typeformUrl = 'https://form.typeform.com/to/WvM2ejru';
+            let typeformUrl = 'https://ianring.typeform.com/to/WvM2ejru';
             const params = new URLSearchParams();
-            
-            if (lat && lng) {
-                params.append('latitude', lat);
-                params.append('longitude', lng);
+
+            if (userLocation) {
+                params.append('latitude', userLocation.lat.toFixed(6));
+                params.append('longitude', userLocation.lng.toFixed(6));
+                params.append('accuracy', Math.round(userLocation.accuracy));
             }
-            if (address) {
-                params.append('address', encodeURIComponent(address));
-            }
-            if (what3words && what3words !== '///loading.location.words') {
-                params.append('what3words', encodeURIComponent(what3words));
-            }
+
             if (transcriptionText.trim()) {
-                params.append('transcription', encodeURIComponent(transcriptionText.trim()));
+                params.append('voice_transcript', transcriptionText.trim());
             }
-            
+
             if (params.toString()) {
                 typeformUrl += '?' + params.toString();
             }
-            
+
             window.open(typeformUrl, '_blank');
         }
 
@@ -413,7 +403,7 @@
                 try {
                     document.getElementById('voiceStatus').textContent = 'Requesting microphone permission...';
                     document.getElementById('voiceStatus').style.display = 'block';
-                    
+
                     const speechSupported = initializeVoiceRecognition();
                     if (!speechSupported) {
                         document.getElementById('voiceStatus').textContent = 'Speech recognition not supported. Proceeding to form...';
@@ -423,9 +413,9 @@
                         }, 2000);
                         return;
                     }
-                    
+
                     const hasPermission = await requestMicrophonePermission();
-                    
+
                     if (!hasPermission) {
                         document.getElementById('voiceStatus').textContent = 'Microphone permission denied. Proceeding without recording...';
                         setTimeout(() => {
@@ -436,7 +426,7 @@
                     }
 
                     document.getElementById('voiceStatus').textContent = 'Starting recording...';
-                    
+
                     setTimeout(() => {
                         try {
                             startRecording();
@@ -452,7 +442,7 @@
                             }, 2000);
                         }
                     }, 500);
-                    
+
                 } catch (error) {
                     console.error('Error handling microphone permission:', error);
                     document.getElementById('voiceStatus').textContent = 'Error accessing microphone. Proceeding to form...';
@@ -478,39 +468,76 @@
                 stopRecording();
             }
         });
+
+        // ===== ENHANCED TYPEFORM AUTHENTICATION INTEGRATION =====
+        // This script checks if the user is authenticated and adds their user ID to the Typeform URL
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('🔍 Checking user authentication status...');
+
+                // Check if user is authenticated
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+
+                if (data.authenticated && data.user && data.user.uid) {
+                    console.log('✅ User authenticated:', data.user.uid);
+                    console.log('👤 User details:', {
+                        uid: data.user.uid,
+                        email: data.user.email,
+                        name: data.user.fullName
+                    });
+
+                    // Store user data globally for use in showTypeform function
+                    window.authenticatedUser = {
+                        uid: data.user.uid,
+                        email: data.user.email,
+                        fullName: data.user.fullName
+                    };
+
+                    // Enhance the showTypeform function to include user ID
+                    const originalShowTypeform = showTypeform;
+                    showTypeform = function() {
+                        let typeformUrl = 'https://ianring.typeform.com/to/WvM2ejru';
+                        const params = new URLSearchParams();
+
+                        // Add authenticated user ID as hidden field
+                        if (window.authenticatedUser && window.authenticatedUser.uid) {
+                            params.append('hidden_user_id', window.authenticatedUser.uid);
+                            console.log('✅ Added User ID to Typeform:', window.authenticatedUser.uid);
+                        }
+
+                        // Add location data if available
+                        if (userLocation) {
+                            params.append('latitude', userLocation.lat.toFixed(6));
+                            params.append('longitude', userLocation.lng.toFixed(6));
+                            params.append('accuracy', Math.round(userLocation.accuracy));
+                        }
+
+                        // Add voice transcript if available
+                        if (transcriptionText.trim()) {
+                            params.append('voice_transcript', transcriptionText.trim());
+                        }
+
+                        // Build final URL
+                        if (params.toString()) {
+                            typeformUrl += '?' + params.toString();
+                        }
+
+                        console.log('🚀 Opening Typeform with enhanced URL:', typeformUrl);
+                        window.open(typeformUrl, '_blank');
+                    };
+
+                } else {
+                    console.log('⚠️ User not authenticated, using Typeform without User ID');
+                    console.log('📝 Authentication response:', data);
+                }
+
+            } catch (error) {
+                console.error('❌ Error checking authentication status:', error);
+                console.log('📝 Proceeding with standard Typeform (no authentication)');
+            }
+        });
+        // ===== END OF AUTHENTICATION INTEGRATION =====
     </script>
 </body>
 </html>
-// ===== ADD THIS SCRIPT TO YOUR INCIDENT REPORT PAGE =====
-
-// This script checks if the user is authenticated and adds their user ID to the Typeform URL
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    // Check if user is authenticated
-    const response = await fetch('/api/auth/status');
-    const data = await response.json();
-
-    if (data.authenticated) {
-      // User is authenticated, get the Typeform URL
-      const typeformIframe = document.querySelector('iframe');
-      if (typeformIframe) {
-        const typeformUrl = typeformIframe.src;
-
-        // Add user ID as hidden field
-        const updatedUrl = typeformUrl.includes('?') 
-          ? `${typeformUrl}&hidden_user_id=${data.user.uid}`
-          : `${typeformUrl}?hidden_user_id=${data.user.uid}`;
-
-        // Update iframe src
-        typeformIframe.src = updatedUrl;
-        console.log('Added user ID to Typeform URL:', data.user.uid);
-      }
-    } else {
-      console.log('User not authenticated, using Typeform without user ID');
-    }
-  } catch (error) {
-    console.error('Error checking authentication status:', error);
-  }
-});
-
-// ===== END OF SCRIPT =====
