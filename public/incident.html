@@ -377,75 +377,25 @@
         }
 
         function showTypeform() {
-            let typeformUrl = 'https://ianring.typeform.com/to/WvM2ejru';
-            const params = new URLSearchParams();
-
-            if (userLocation) {
-                params.append('latitude', userLocation.lat.toFixed(6));
-                params.append('longitude', userLocation.lng.toFixed(6));
-                params.append('accuracy', Math.round(userLocation.accuracy));
-            }
-
-            if (transcriptionText.trim()) {
-                params.append('voice_transcript', transcriptionText.trim());
-            }
-
-            if (params.toString()) {
-                typeformUrl += '?' + params.toString();
-            }
-
-            window.open(typeformUrl, '_blank');
+            window.open('https://form.typeform.com/to/WvM2ejru', '_blank');
         }
 
-        // Button Event Handlers
         document.getElementById('activateWhisperBtn').onclick = async function() {
             if (!isRecording) {
-                try {
-                    document.getElementById('voiceStatus').textContent = 'Requesting microphone permission...';
+                const hasPermission = await requestMicrophonePermission();
+                if (hasPermission) {
+                    if (initializeVoiceRecognition()) {
+                        startRecording();
+                        setTimeout(() => {
+                            stopRecording();
+                            showTypeform();
+                        }, 30000);
+                    } else {
+                        showTypeform();
+                    }
+                } else {
+                    document.getElementById('voiceStatus').textContent = 'Microphone access required. Proceeding to form...';
                     document.getElementById('voiceStatus').style.display = 'block';
-
-                    const speechSupported = initializeVoiceRecognition();
-                    if (!speechSupported) {
-                        document.getElementById('voiceStatus').textContent = 'Speech recognition not supported. Proceeding to form...';
-                        setTimeout(() => {
-                            document.getElementById('voiceStatus').style.display = 'none';
-                            showTypeform();
-                        }, 2000);
-                        return;
-                    }
-
-                    const hasPermission = await requestMicrophonePermission();
-
-                    if (!hasPermission) {
-                        document.getElementById('voiceStatus').textContent = 'Microphone permission denied. Proceeding without recording...';
-                        setTimeout(() => {
-                            document.getElementById('voiceStatus').style.display = 'none';
-                            showTypeform();
-                        }, 2000);
-                        return;
-                    }
-
-                    document.getElementById('voiceStatus').textContent = 'Starting recording...';
-
-                    setTimeout(() => {
-                        try {
-                            startRecording();
-                            setTimeout(() => {
-                                showTypeform();
-                            }, 1500);
-                        } catch (speechError) {
-                            console.error('Speech recognition start error:', speechError);
-                            document.getElementById('voiceStatus').textContent = 'Unable to start recording. Proceeding to form...';
-                            setTimeout(() => {
-                                document.getElementById('voiceStatus').style.display = 'none';
-                                showTypeform();
-                            }, 2000);
-                        }
-                    }, 500);
-
-                } catch (error) {
-                    console.error('Error handling microphone permission:', error);
-                    document.getElementById('voiceStatus').textContent = 'Error accessing microphone. Proceeding to form...';
                     setTimeout(() => {
                         document.getElementById('voiceStatus').style.display = 'none';
                         showTypeform();
@@ -453,6 +403,7 @@
                 }
             } else {
                 stopRecording();
+                showTypeform();
             }
         };
 
@@ -494,10 +445,12 @@
                         fullName: data.user.fullName
                     };
 
+                    console.log('✅ Authentication integration ready with user ID:', data.user.uid);
+
                     // Enhance the showTypeform function to include user ID
                     const originalShowTypeform = showTypeform;
                     showTypeform = function() {
-                        let typeformUrl = 'https://ianring.typeform.com/to/WvM2ejru';
+                        let typeformUrl = 'https://form.typeform.com/to/WvM2ejru';
                         const params = new URLSearchParams();
 
                         // Add authenticated user ID as hidden field
