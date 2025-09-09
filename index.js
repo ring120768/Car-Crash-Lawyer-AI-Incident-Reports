@@ -24,6 +24,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- SHARED KEY AUTH (for Zapier/Replit integration) ---
+const SHARED_KEY = process.env.ZAPIER_SHARED_KEY || process.env.WEBHOOK_API_KEY || '';
+function checkSharedKey(req, res, next) {
+  const headerKey = req.get('X-Api-Key');
+  const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  const provided = headerKey || bearer || '';
+
+  if (!SHARED_KEY) {
+    console.warn('⚠️  No ZAPIER_SHARED_KEY/WEBHOOK_API_KEY set. Auth will fail.');
+    return res.status(503).json({ error: 'Server missing shared key (ZAPIER_SHARED_KEY)' });
+  }
+  if (provided !== SHARED_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  return next();
+}
+
 // --- SUPABASE SETUP ---
 let supabase = null;
 let supabaseEnabled = false;
@@ -383,7 +400,8 @@ app.get('/', (req, res) => {
         <div class="endpoint">
           <strong>Webhooks:</strong><br>
           <code>POST /webhook/signup</code> - Process images from Zapier<br>
-          <code>POST /webhook/process-images</code> - Alternative image processing endpoint
+          <code>POST /webhook/process-images</code> - Alternative image processing endpoint<br>
+          <code>POST /zaphook</code> - Generic secure Zapier endpoint
         </div>
 
         <div class="endpoint">
@@ -406,15 +424,9 @@ app.get('/', (req, res) => {
  * Main webhook endpoint for processing images from Zapier
  * This should be called AFTER Zapier has created the user_signup record
  */
-app.post('/webhook/signup', async (req, res) => {
+app.post('/webhook/signup', checkSharedKey, async (req, res) => {
   try {
     console.log('📝 Image processing webhook received from Zapier');
-
-    // Validate API key if set
-    const apiKey = req.headers['x-api-key'];
-    if (process.env.WEBHOOK_API_KEY && apiKey !== process.env.WEBHOOK_API_KEY) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
 
     if (!supabaseEnabled || !imageProcessor) {
       return res.status(503).json({ error: 'Service not configured' });
@@ -457,7 +469,7 @@ app.post('/webhook/signup', async (req, res) => {
 /**
  * Alternative endpoint for processing images
  */
-app.post('/webhook/process-images', async (req, res) => {
+app.post('/webhook/process-images', checkSharedKey, async (req, res) => {
   try {
     console.log('🖼️ Alternative image processing endpoint called');
 
@@ -477,6 +489,24 @@ app.post('/webhook/process-images', async (req, res) => {
     res.status(500).json({ 
       error: error.message 
     });
+  }
+});
+
+/**
+ * Generic secure endpoint for Zapier → Replit calls
+ * Use this if you just need a simple, authenticated entry point.
+ */
+app.post('/zaphook', checkSharedKey, async (req, res) => {
+  try {
+    // Do whatever you need here. Example: just echo back for testing.
+    return res.json({
+      ok: true,
+      received: req.body,
+      ts: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error in /zaphook:', error);
+    return res.status(500).json({ error: error.message });
   }
 });
 
@@ -645,12 +675,16 @@ app.listen(PORT, HOST, () => {
 
   console.log(`\n📊 Status: ${supabaseEnabled ? '✅ Supabase connected' : '❌ Supabase not configured'}`);
 
+  console.log(`\n🔐 Auth key present: ${SHARED_KEY ? '✅ yes' : '❌ no (set ZAPIER_SHARED_KEY)'}`);
+
   console.log(`\n🔗 Key Endpoints:`);
+  console.log(`   POST /zaphook - Generic secure Zapier endpoint`);
   console.log(`   POST /webhook/signup - Process images from Zapier`);
   console.log(`   GET  /test/image-status/:userId - Check processing status`);
 
   console.log(`\n✅ Server is ready to receive webhooks!`);
 });
+
 
 
 
