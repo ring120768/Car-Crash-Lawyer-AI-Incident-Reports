@@ -1,26 +1,21 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const admin = require('firebase-admin');
-const { google } = require('googleapis');
 const axios = require('axios');
-const fs = require('fs');
 const cors = require('cors');
-const cookieParser = require('cookie-parser'); // Added for authentication
-const authRoutes = require('./routes/auth'); // Added for authentication
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
-// Import services
-const { subscribeToIncidentReports } = require('./services/incidentReports');
-const { subscribeToUserSignUps, getUserDetails } = require('./services/userSignUps');
+// Import Supabase client
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
 // --- MIDDLEWARE SETUP ---
-app.use(cors()); // Enable CORS for all routes
-app.use(bodyParser.json({ limit: '10mb' })); // Increased limit for larger payloads
+app.use(cors());
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser()); // Added for authentication
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Request logging middleware
@@ -29,51 +24,285 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- FIREBASE SETUP ---
-let db = null;
-if (!admin.apps.length) {
-  const base64 = process.env.FIREBASE_CREDENTIALS_BASE64;
-  if (!base64) {
-    console.warn('⚠️ FIREBASE_CREDENTIALS_BASE64 not found - Firebase features disabled');
-  } else {
-    try {
-      const decoded = Buffer.from(base64, 'base64').toString('utf8');
-      const serviceAccount = JSON.parse(decoded);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-      db = admin.firestore();
-      console.log('✅ Firebase initialized successfully');
+// --- SUPABASE SETUP ---
+let supabase = null;
+let supabaseEnabled = false;
 
-      // Start listening for real-time updates
-      subscribeToIncidentReports();
-      subscribeToUserSignUps();
-      console.log('🔔 Listening for Firestore updates');
+const initSupabase = () => {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+
+  if (!url || !key) {
+    console.error('❌ SUPABASE_URL or SUPABASE_SERVICE_KEY not found');
+    return false;
+  }
+
+  try {
+    supabase = createClient(url, key);
+    console.log('✅ Supabase initialized successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error initializing Supabase:', error.message);
+    return false;
+  }
+};
+
+supabaseEnabled = initSupabase();
+
+// --- IMAGE PROCESSOR CLASS ---
+class ImageProcessor {
+  constructor() {
+    this.supabase = supabase;
+    this.bucketName = 'incident-images-secure';
+  }
+
+  /**
+   * Process images from Zapier webhook
+   */
+  async processSignupImages(webhookData) {
+    try {
+      console.log('🖼️ Processing images for user:', webhookData.id);
+
+      // Image fields to process
+      const imageFields = [
+        'driving_license_picture',
+        'vehicle_picture_front',
+        'vehicle_picture_driver_side',
+        'vehicle_picture_passenger_side',
+        'vehicle_picture_back'
+      ];
+
+      const uploadedImages = {};
+      const processedImages = [];
+
+      // Process each image field
+      for (const field of imageFields) {
+        if (webhookData[field] && webhookData[field].startsWith('http')) {
+          console.log(`  Processing ${field}...`);
+
+          try {
+            // Download image from Typeform
+            const imageBuffer = await this.downloadImage(webhookData[field]);
+
+            // Generate unique filename
+            const fileName = `${webhookData.id}/${field}_${Date.now()}.jpg`;
+
+            // Upload to Supabase storage
+            const storagePath = await this.uploadToSupabase(imageBuffer, fileName);
+
+            // Store the Supabase storage path
+            uploadedImages[field] = storagePath;
+
+            // Create record in incident_images table
+            const imageRecord = await this.createImageRecord({
+              user_id: webhookData.id,
+              image_type: field,
+              storage_path: storagePath,
+              original_url: webhookData[field],
+              metadata: {
+                upload_date: new Date().toISOString(),
+                source: 'typeform',
+                gdpr_consent: true
+              }
+            });
+
+            processedImages.push(imageRecord);
+            console.log(`  ✓ ${field} uploaded successfully`);
+
+          } catch (imgError) {
+            console.error(`  ✗ Error processing ${field}:`, imgError.message);
+            uploadedImages[field] = null; // Set to null if failed
+          }
+        }
+      }
+
+      // Update user_signup record with new Supabase storage paths
+      if (Object.keys(uploadedImages).length > 0) {
+        const { data: updateData, error: updateError } = await this.supabase
+          .from('user_signup')
+          .update(uploadedImages)
+          .eq('id', webhookData.id)
+          .select();
+
+        if (updateError) {
+          console.error('Error updating user_signup:', updateError);
+        } else {
+          console.log('✅ Updated user_signup with storage paths');
+        }
+      }
+
+      return {
+        success: true,
+        user_id: webhookData.id,
+        images_processed: processedImages.length,
+        updated_fields: uploadedImages
+      };
+
     } catch (error) {
-      console.error('❌ Error initializing Firebase:', error.message);
+      console.error('Error in processSignupImages:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Download image from URL
+   */
+  async downloadImage(url) {
+    try {
+      const response = await axios.get(url, {
+        responseType: 'arraybuffer',
+        timeout: 30000,
+        headers: {
+          'User-Agent': 'Car-Crash-Lawyer-AI/1.0'
+        }
+      });
+
+      return Buffer.from(response.data);
+    } catch (error) {
+      console.error('Error downloading image:', error.message);
+      throw new Error(`Failed to download image: ${error.message}`);
+    }
+  }
+
+  /**
+   * Upload image to Supabase storage
+   */
+  async uploadToSupabase(buffer, fileName) {
+    try {
+      const { data, error } = await this.supabase.storage
+        .from(this.bucketName)
+        .upload(fileName, buffer, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      return data.path;
+    } catch (error) {
+      console.error('Error uploading to Supabase:', error);
+      throw new Error(`Failed to upload to storage: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create record in incident_images table
+   */
+  async createImageRecord(imageData) {
+    const { data, error } = await this.supabase
+      .from('incident_images')
+      .insert([{
+        user_id: imageData.user_id,
+        image_type: imageData.image_type,
+        storage_path: imageData.storage_path,
+        original_url: imageData.original_url,
+        upload_date: new Date().toISOString(),
+        metadata: imageData.metadata,
+        access_count: 0,
+        is_active: true
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating image record:', error);
+      // Don't throw - we can continue even if this fails
+      return null;
+    }
+
+    return data;
+  }
+
+  /**
+   * Generate signed URL for secure image access
+   */
+  async getSignedUrl(storagePath, expiresIn = 3600) {
+    const { data, error } = await this.supabase.storage
+      .from(this.bucketName)
+      .createSignedUrl(storagePath, expiresIn);
+
+    if (error) {
+      throw error;
+    }
+
+    // Log access
+    await this.logImageAccess(storagePath);
+
+    return data.signedUrl;
+  }
+
+  /**
+   * Log image access for GDPR compliance
+   */
+  async logImageAccess(storagePath, accessedBy = 'system') {
+    const { error } = await this.supabase
+      .from('image_access_log')
+      .insert([{
+        storage_path: storagePath,
+        accessed_at: new Date().toISOString(),
+        accessed_by: accessedBy,
+        purpose: 'signed_url_generation'
+      }]);
+
+    if (error) {
+      console.error('Error logging access:', error);
+    }
+  }
+
+  /**
+   * Delete all images for a user (GDPR compliance)
+   */
+  async deleteAllUserImages(userId) {
+    try {
+      // Get all images for the user
+      const { data: images, error: fetchError } = await this.supabase
+        .from('incident_images')
+        .select('storage_path')
+        .eq('user_id', userId);
+
+      if (fetchError) throw fetchError;
+
+      // Delete from storage
+      const deletionResults = [];
+      for (const image of images) {
+        const { error } = await this.supabase.storage
+          .from(this.bucketName)
+          .remove([image.storage_path]);
+
+        deletionResults.push({
+          path: image.storage_path,
+          deleted: !error
+        });
+      }
+
+      // Mark as deleted in database
+      const { error: updateError } = await this.supabase
+        .from('incident_images')
+        .update({ 
+          is_active: false,
+          deleted_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      return {
+        images_deleted: deletionResults.filter(r => r.deleted).length,
+        total_images: images.length,
+        details: deletionResults
+      };
+
+    } catch (error) {
+      console.error('Error deleting user images:', error);
+      throw error;
     }
   }
 }
 
-// --- GOOGLE DRIVE SETUP ---
-let drive = null;
-const driveBase64 = process.env.GOOGLE_DRIVE_CREDENTIALS_BASE64;
-if (!driveBase64) {
-  console.warn('⚠️ GOOGLE_DRIVE_CREDENTIALS_BASE64 not found - Drive features disabled');
-} else {
-  try {
-    const decoded = Buffer.from(driveBase64, 'base64').toString('utf8');
-    const driveCredentials = JSON.parse(decoded);
-    const auth = new google.auth.GoogleAuth({
-      credentials: driveCredentials,
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    });
-    drive = google.drive({ version: 'v3', auth });
-    console.log('✅ Google Drive initialized successfully');
-  } catch (error) {
-    console.error('❌ Error initializing Google Drive:', error.message);
-  }
-}
+// Initialize image processor
+const imageProcessor = supabaseEnabled ? new ImageProcessor() : null;
 
 // --- UTILITY FUNCTIONS ---
 function processTypeformData(formResponse) {
@@ -83,9 +312,7 @@ function processTypeformData(formResponse) {
     formResponse.form_response.answers.forEach(answer => {
       const fieldId = answer.field.id;
       const fieldRef = answer.field.ref;
-      const fieldType = answer.field.type;
 
-      // Extract value based on field type
       let value = null;
       if (answer.text) value = answer.text;
       else if (answer.email) value = answer.email;
@@ -98,7 +325,6 @@ function processTypeformData(formResponse) {
       else if (answer.url) value = answer.url;
       else if (answer.file_url) value = answer.file_url;
 
-      // Store with both field ID and ref for flexibility
       if (value !== null) {
         processedData[fieldId] = value;
         if (fieldRef) processedData[fieldRef] = value;
@@ -106,7 +332,6 @@ function processTypeformData(formResponse) {
     });
   }
 
-  // Add metadata
   processedData.submitted_at = formResponse.form_response?.submitted_at || new Date().toISOString();
   processedData.form_id = formResponse.form_response?.form_id;
   processedData.response_id = formResponse.form_response?.token;
@@ -120,217 +345,277 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     services: {
-      firebase: !!db,
-      googleDrive: !!drive,
+      supabase: supabaseEnabled,
       server: true
     }
   };
   res.json(status);
 });
 
-// --- AUTHENTICATION ROUTES ---
-app.use('/api/auth', authRoutes); // Added for authentication
-
 // --- MAIN ROUTES ---
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Car Crash Lawyer AI</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        h1 { color: #333; }
+        .status { padding: 10px; background: #4CAF50; color: white; border-radius: 5px; display: inline-block; }
+        .endpoint { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        code { background: #333; color: #4CAF50; padding: 2px 6px; border-radius: 3px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🚗 Car Crash Lawyer AI - GDPR Compliant System</h1>
+        <p class="status">✅ Server is running</p>
+
+        <h2>Available Endpoints:</h2>
+
+        <div class="endpoint">
+          <strong>Health Check:</strong><br>
+          <code>GET /health</code>
+        </div>
+
+        <div class="endpoint">
+          <strong>Webhooks:</strong><br>
+          <code>POST /webhook/signup</code> - Process images from Zapier<br>
+          <code>POST /webhook/process-images</code> - Alternative image processing endpoint
+        </div>
+
+        <div class="endpoint">
+          <strong>Image Management:</strong><br>
+          <code>GET /api/images/:userId</code> - Get user images<br>
+          <code>GET /api/image/signed-url/:userId/:imageType</code> - Get signed URL<br>
+          <code>DELETE /api/gdpr/delete-images</code> - GDPR deletion
+        </div>
+
+        <p><strong>Supabase Status:</strong> ${supabaseEnabled ? '✅ Connected' : '❌ Not configured'}</p>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
-app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'signup.html'));
-});
+// --- WEBHOOK ENDPOINTS ---
 
-app.get('/report', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'report.html'));
-});
-
-app.get('/subscribe', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
-});
-
-// --- TYPEFORM WEBHOOK ENDPOINTS ---
+/**
+ * Main webhook endpoint for processing images from Zapier
+ * This should be called AFTER Zapier has created the user_signup record
+ */
 app.post('/webhook/signup', async (req, res) => {
   try {
-    console.log('📝 Sign-up webhook received');
-    console.log('Raw payload:', JSON.stringify(req.body, null, 2));
+    console.log('📝 Image processing webhook received from Zapier');
 
-    if (!db) {
-      throw new Error('Firebase not initialized');
+    // Validate API key if set
+    const apiKey = req.headers['x-api-key'];
+    if (process.env.WEBHOOK_API_KEY && apiKey !== process.env.WEBHOOK_API_KEY) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const processedData = processTypeformData(req.body);
-    console.log('Processed sign-up data:', processedData);
-
-    // Generate user ID (use response_id or generate one)
-    const userId = processedData.response_id || `user_${Date.now()}`;
-
-    // Store in Firestore
-    const userRef = db.collection('Car Crash Lawyer AI User Sign Up').doc(userId);
-    await userRef.set({
-      ...processedData,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      user_id: userId
-    });
-
-    console.log('✅ Sign-up data stored successfully with ID:', userId);
-    res.status(200).json({ 
-      success: true, 
-      message: 'Sign-up data processed successfully',
-      userId: userId 
-    });
-
-  } catch (error) {
-    console.error('❌ Error processing sign-up webhook:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
-});
-
-app.post('/webhook/incident', async (req, res) => {
-  try {
-    console.log('🚨 Incident report webhook received');
-    console.log('Raw payload:', JSON.stringify(req.body, null, 2));
-
-    if (!db) {
-      throw new Error('Firebase not initialized');
+    if (!supabaseEnabled || !imageProcessor) {
+      return res.status(503).json({ error: 'Service not configured' });
     }
 
-    const processedData = processTypeformData(req.body);
-    console.log('Processed incident data:', processedData);
+    const webhookData = req.body;
 
-    // Generate incident ID
-    const incidentId = processedData.response_id || `incident_${Date.now()}`;
-
-    // Store in Firestore
-    const incidentRef = db.collection('Car Crash Lawyer AI Incident Reports').doc(incidentId);
-    await incidentRef.set({
-      ...processedData,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      incident_id: incidentId
-    });
-
-    console.log('✅ Incident data stored successfully with ID:', incidentId);
-    res.status(200).json({ 
-      success: true, 
-      message: 'Incident data processed successfully',
-      incidentId: incidentId 
-    });
-
-  } catch (error) {
-    console.error('❌ Error processing incident webhook:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
-});
-
-// --- API ENDPOINTS ---
-
-// What3Words API
-app.get('/api/what3words', async (req, res) => {
-  const { lat, lng } = req.query;
-  const apiKey = process.env.WHAT3WORDS_API_KEY;
-
-  console.log('🌍 What3Words API request:', { lat, lng, hasApiKey: !!apiKey });
-
-  if (!lat || !lng) {
-    return res.status(400).json({ error: 'Missing lat or lng parameters' });
-  }
-
-  if (!apiKey) {
-    console.error('❌ WHAT3WORDS_API_KEY environment variable not set');
-    return res.status(500).json({ error: 'What3Words API key not configured' });
-  }
-
-  try {
-    const url = `https://api.what3words.com/v3/convert-to-3wa?coordinates=${lat},${lng}&key=${apiKey}`;
-    console.log('Making request to What3Words:', url.replace(apiKey, '[HIDDEN]'));
-
-    const response = await axios.get(url);
-    console.log('What3Words response:', response.data);
-
-    if (response.data && response.data.words) {
-      res.json({ words: response.data.words });
-    } else {
-      console.error('What3Words response missing words field:', response.data);
-      res.status(500).json({ error: 'No what3words found in response' });
-    }
-  } catch (err) {
-    console.error('❌ What3Words API error:', err.message);
-    if (err.response) {
-      console.error('What3Words error response:', err.response.status, err.response.data);
-    }
-    res.status(500).json({
-      error: 'Failed to fetch what3words',
-      details: err.response?.data || err.message,
-    });
-  }
-});
-
-// User Details API
-app.get('/api/user-details/:userId', async (req, res) => {
-  const { userId } = req.params;
-
-  console.log('👤 User details API request for userId:', userId);
-
-  if (!userId) {
-    return res.status(400).json({ error: 'Missing userId parameter' });
-  }
-
-  try {
-    const result = await getUserDetails(userId);
-
-    if (result.success) {
-      console.log('✅ User details found for:', userId);
-      res.json(result.data);
-    } else {
-      console.log('❌ User not found:', userId);
-      res.status(404).json({ error: result.error });
-    }
-  } catch (error) {
-    console.error('❌ Error fetching user details:', error.message);
-    res.status(500).json({ 
-      error: 'Failed to fetch user details',
-      details: error.message 
-    });
-  }
-});
-
-// List all users (for debugging)
-app.get('/api/users', async (req, res) => {
-  try {
-    if (!db) {
-      throw new Error('Firebase not initialized');
+    // Validate required fields
+    if (!webhookData.id) {
+      return res.status(400).json({ error: 'Missing record ID' });
     }
 
-    const snapshot = await db.collection('Car Crash Lawyer AI User Sign Up').limit(10).get();
-    const users = [];
+    console.log('Processing images for user ID:', webhookData.id);
 
-    snapshot.forEach(doc => {
-      users.push({
-        id: doc.id,
-        ...doc.data()
+    // Process images asynchronously
+    imageProcessor.processSignupImages(webhookData)
+      .then(result => {
+        console.log('✅ Image processing complete:', result);
+      })
+      .catch(error => {
+        console.error('❌ Image processing failed:', error);
       });
-    });
 
-    console.log(`📋 Listed ${users.length} users`);
-    res.json({ users, count: users.length });
+    // Return immediate response to Zapier
+    res.status(200).json({ 
+      success: true, 
+      message: 'Image processing started',
+      userId: webhookData.id 
+    });
 
   } catch (error) {
-    console.error('❌ Error listing users:', error.message);
+    console.error('❌ Webhook error:', error);
     res.status(500).json({ 
-      error: 'Failed to list users',
-      details: error.message 
+      success: false, 
+      error: error.message 
     });
+  }
+});
+
+/**
+ * Alternative endpoint for processing images
+ */
+app.post('/webhook/process-images', async (req, res) => {
+  try {
+    console.log('🖼️ Alternative image processing endpoint called');
+
+    if (!supabaseEnabled || !imageProcessor) {
+      return res.status(503).json({ error: 'Service not configured' });
+    }
+
+    const result = await imageProcessor.processSignupImages(req.body);
+
+    res.status(200).json({
+      success: true,
+      ...result
+    });
+
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ 
+      error: error.message 
+    });
+  }
+});
+
+// --- IMAGE ACCESS ENDPOINTS ---
+
+/**
+ * Get all images for a user
+ */
+app.get('/api/images/:userId', async (req, res) => {
+  if (!supabaseEnabled) {
+    return res.status(503).json({ error: 'Service not configured' });
+  }
+
+  try {
+    const { userId } = req.params;
+
+    // Get all images for this user
+    const { data, error } = await supabase
+      .from('incident_images')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      count: data.length,
+      images: data
+    });
+  } catch (error) {
+    console.error('Error fetching images:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get signed URL for a specific image
+ */
+app.get('/api/image/signed-url/:userId/:imageType', async (req, res) => {
+  if (!supabaseEnabled || !imageProcessor) {
+    return res.status(503).json({ error: 'Service not configured' });
+  }
+
+  try {
+    const { userId, imageType } = req.params;
+
+    // Get image record
+    const { data: image, error } = await supabase
+      .from('incident_images')
+      .select('storage_path')
+      .eq('user_id', userId)
+      .eq('image_type', imageType)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Generate signed URL (expires in 1 hour)
+    const signedUrl = await imageProcessor.getSignedUrl(image.storage_path);
+
+    res.json({
+      signed_url: signedUrl,
+      expires_in: '1 hour'
+    });
+  } catch (error) {
+    console.error('Error generating signed URL:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Delete all images for a user (GDPR compliance)
+ */
+app.delete('/api/gdpr/delete-images', async (req, res) => {
+  if (!supabaseEnabled || !imageProcessor) {
+    return res.status(503).json({ error: 'Service not configured' });
+  }
+
+  try {
+    const userId = req.headers['x-user-id'] || req.body.userId;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID required' });
+    }
+
+    const result = await imageProcessor.deleteAllUserImages(userId);
+
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('Error deleting images:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- TEST ENDPOINTS ---
+
+/**
+ * Test endpoint to check image processing status
+ */
+app.get('/test/image-status/:userId', async (req, res) => {
+  if (!supabaseEnabled) {
+    return res.status(503).json({ error: 'Service not configured' });
+  }
+
+  try {
+    const { userId } = req.params;
+
+    // Check user_signup record
+    const { data: userRecord, error: userError } = await supabase
+      .from('user_signup')
+      .select('id, driving_license_picture, vehicle_picture_front, vehicle_picture_back')
+      .eq('id', userId)
+      .single();
+
+    // Check incident_images records
+    const { data: images, error: imageError } = await supabase
+      .from('incident_images')
+      .select('*')
+      .eq('user_id', userId);
+
+    res.json({
+      user_record: userRecord,
+      images_in_db: images?.length || 0,
+      images: images
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
 // --- ERROR HANDLING ---
 app.use((err, req, res, next) => {
-  console.error('❌ Unhandled error:', err);
+  console.error('Unhandled error:', err);
   res.status(500).json({ 
     error: 'Internal server error',
     message: err.message 
@@ -346,16 +631,27 @@ app.use((req, res) => {
 });
 
 // --- START SERVER ---
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚗 Car Crash Lawyer AI server running on http://localhost:${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`📝 Sign-up webhook: http://localhost:${PORT}/webhook/signup`);
-  console.log(`🚨 Incident webhook: http://localhost:${PORT}/webhook/incident`);
-  console.log(`👤 User API: http://localhost:${PORT}/api/user-details/{userId}`);
-  console.log(`📋 Users list: http://localhost:${PORT}/api/users`);
-  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+  console.log(`🚗 Car Crash Lawyer AI - GDPR Compliant Edition`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Local: http://localhost:${PORT}`);
+
+  if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+    console.log(`🌐 Public: https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+  }
+
+  console.log(`\n📊 Status: ${supabaseEnabled ? '✅ Supabase connected' : '❌ Supabase not configured'}`);
+
+  console.log(`\n🔗 Key Endpoints:`);
+  console.log(`   POST /webhook/signup - Process images from Zapier`);
+  console.log(`   GET  /test/image-status/:userId - Check processing status`);
+
+  console.log(`\n✅ Server is ready to receive webhooks!`);
 });
+
 
 
 
