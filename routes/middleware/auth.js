@@ -1,20 +1,30 @@
 // middleware/auth.js
-const { admin } = require('../services/firebase');
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+);
 
 // Middleware to verify authentication
 const requireAuth = async (req, res, next) => {
   try {
-    const sessionCookie = req.cookies.session || '';
+    const sessionToken = req.cookies.session || '';
 
-    if (!sessionCookie) {
+    if (!sessionToken) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
 
-    // Verify the session cookie
-    const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
+    // Verify the session token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(sessionToken);
+    
+    if (error || !user) {
+      return res.status(401).json({ success: false, error: 'Authentication failed' });
+    }
 
     // Add user ID to request object
-    req.userId = decodedClaims.uid;
+    req.userId = user.id;
 
     next();
   } catch (error) {

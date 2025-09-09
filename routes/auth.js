@@ -1,29 +1,38 @@
 // routes/auth.js
 const express = require('express');
 const router = express.Router();
-const { admin } = require('../services/firebase');
+const { createClient } = require('@supabase/supabase-js');
 const { createUser, getUserById } = require('../services/userAuth');
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+);
 
 // Check authentication status
 router.get('/status', async (req, res) => {
   try {
-    const sessionCookie = req.cookies.session || '';
+    const sessionToken = req.cookies.session || '';
 
-    if (!sessionCookie) {
+    if (!sessionToken) {
       return res.json({ authenticated: false });
     }
 
-    // Verify the session cookie
-    const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
-    const uid = decodedClaims.uid;
+    // Verify the session token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(sessionToken);
+    
+    if (error || !user) {
+      return res.json({ authenticated: false });
+    }
 
-    // Get user data from Firestore
-    const userData = await getUserById(uid);
+    // Get user data from database
+    const userData = await getUserById(user.id);
 
     return res.json({
       authenticated: true,
       user: {
-        uid: uid,
+        uid: user.id,
         email: userData.email,
         fullName: userData.full_name
       }
@@ -43,20 +52,21 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email and password are required' });
     }
 
-    // Sign in with Firebase Auth
-    const userCredential = await admin.auth().getUserByEmail(email);
+    // Sign in with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    // Create session cookie
-    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
-    const idToken = req.body.idToken; // This should be sent from the client
-
-    if (!idToken) {
-      return res.status(400).json({ success: false, error: 'ID token is required' });
+    if (error) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid email or password'
+      });
     }
 
-    const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
-
-    // Set cookie options
+    // Set session cookie
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
     const options = {
       maxAge: expiresIn,
       httpOnly: true,
@@ -64,11 +74,11 @@ router.post('/login', async (req, res) => {
       sameSite: 'strict'
     };
 
-    res.cookie('session', sessionCookie, options);
+    res.cookie('session', data.session.access_token, options);
 
     return res.json({
       success: true,
-      userId: userCredential.uid
+      userId: data.user.id
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -88,18 +98,21 @@ router.post('/logout', (req, res) => {
 // Get user profile
 router.get('/profile', async (req, res) => {
   try {
-    const sessionCookie = req.cookies.session || '';
+    const sessionToken = req.cookies.session || '';
 
-    if (!sessionCookie) {
+    if (!sessionToken) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
 
-    // Verify the session cookie
-    const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
-    const uid = decodedClaims.uid;
+    // Verify the session token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(sessionToken);
+    
+    if (error || !user) {
+      return res.status(401).json({ success: false, error: 'Authentication failed' });
+    }
 
-    // Get user data from Firestore
-    const userData = await getUserById(uid);
+    // Get user data from database
+    const userData = await getUserById(user.id);
 
     return res.json({
       success: true,
