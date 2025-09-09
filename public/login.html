@@ -141,23 +141,8 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-
   <script>
-    // Initialize Firebase (you'll need to replace these with your actual Firebase config)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+    // Authentication now handled by backend Supabase integration
 
     // Handle login form submission
     document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -168,19 +153,13 @@
       const errorElement = document.getElementById('error-message');
 
       try {
-        // Sign in with Firebase
-        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-
-        // Get ID token
-        const idToken = await userCredential.user.getIdToken();
-
-        // Send ID token to backend
-        const response = await fetch('/api/auth/login', {
+        // Send credentials to backend for authentication
+        const response = await fetch('/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ idToken })
+          body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
@@ -213,10 +192,10 @@
       }
 
       try {
-        await firebase.auth().sendPasswordResetEmail(email);
-        errorElement.textContent = 'Password reset email sent. Please check your inbox.';
+        // Password reset functionality to be implemented with Supabase
+        errorElement.textContent = 'Password reset functionality coming soon!';
         errorElement.style.display = 'block';
-        errorElement.style.color = '#27ae60'; // Green color for success
+        errorElement.style.color = '#f39c12'; // Orange color for info
       } catch (error) {
         console.error('Password reset error:', error);
         errorElement.textContent = error.message || 'Failed to send password reset email';
